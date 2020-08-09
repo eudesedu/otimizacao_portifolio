@@ -4,6 +4,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import dask.dataframe as dd
 import glob
 
 def f_extract(fi_cad, set_wd, len_count):
@@ -24,7 +25,7 @@ def f_extract(fi_cad, set_wd, len_count):
         for link in fi_cad_soup.find_all('a'):
             fi_cad_csv.append(link.get('href'))
         inf_cadastral_fi = fi_cad_csv[len(fi_cad_csv)-(len_count[path]):(len(fi_cad_csv)-2)]
-        
+
         # Salva todos os arquivos em seus respectivos diretórios.
         for files in range(0, len(inf_cadastral_fi)):
             fi_cad_csv_url = fi_cad[path]+inf_cadastral_fi[files]
@@ -43,7 +44,7 @@ def f_transform(set_wd):
     os.chdir(set_wd[0])
 
     # Sample!
-    fi_cad_list = [files for files in glob.glob('*.{}'.format('CSV'))]
+    fi_cad_list = glob.glob('*.csv')
     fi_cad_sample = pd.concat([pd.read_csv(files, sep=';', engine='python') for files in fi_cad_list[1:2]])
 
     # Verificação
@@ -52,11 +53,11 @@ def f_transform(set_wd):
           fi_cad_sample.columns, 
           fi_cad_sample.count(), 
           fi_cad_sample.isnull().sum(), 
-          fi_cad_sample.nunique(), 
+          #fi_cad_sample.nunique(), 
           fi_cad_sample.shape)
     
     # Sample!
-    fi_cad_sample = pd.read_csv(fi_cad_list[1], sep=';', engine='python').drop(columns=['DT_REG',
+    fi_cad_sample = dd.read_csv(fi_cad_list[1], sep=';', engine='python').drop(columns=['DT_REG',
                                                                                         'DT_CONST',
                                                                                         'DT_CANCEL',
                                                                                         'DT_INI_SIT',
