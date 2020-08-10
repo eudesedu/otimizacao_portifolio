@@ -48,7 +48,7 @@ def f_transform(set_wd):
         # Cria uma lista com os names dos arquivos com extenção CSV.
         files_list = glob.glob('*.csv')
 
-        # Define um limite de 50MB para leituras dos arquivos na fonte.
+        # Define um limite de 50MB para leitura dos arquivos da fonte pública.
         csv.field_size_limit(500000)
 
         for files in range(0, len(files_list)):
