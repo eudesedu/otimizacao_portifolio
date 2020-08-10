@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import dask.dataframe as dd
 import glob
+import csv
 
 def f_extract(fi_cad, set_wd, len_count):
     """
@@ -39,115 +40,40 @@ def f_transform(set_wd):
     """
     Aplica uma série de transformações aos dados extraídos para gerar o fluxo que será carregado.
     """
+    for path in range(0, 2):
 
-    # Comente!
-    os.chdir(set_wd[0])
+        # Determina o diretorio dos arquivos em cada enlace.
+        os.chdir(set_wd[path])
 
-    # Sample!
-    fi_cad_list = glob.glob('*.csv')
-    fi_cad_sample = pd.concat([pd.read_csv(files, sep=';', engine='python') for files in fi_cad_list[1:2]])
+        # Cria uma lista com os names dos arquivos com extenção CSV.
+        files_list = glob.glob('*.csv')
 
-    # Verificação
-    print(fi_cad_sample, 
-          fi_cad_sample.dtypes, 
-          fi_cad_sample.columns, 
-          fi_cad_sample.count(), 
-          fi_cad_sample.isnull().sum(), 
-          #fi_cad_sample.nunique(), 
-          fi_cad_sample.shape)
-    
-    # Sample!
-    fi_cad_sample = dd.read_csv(fi_cad_list[1], sep=';', engine='python').drop(columns=['DT_REG',
-                                                                                        'DT_CONST',
-                                                                                        'DT_CANCEL',
-                                                                                        'DT_INI_SIT',
-                                                                                        'DT_INI_ATIV',
-                                                                                        'RENTAB_FUNDO',
-                                                                                        'TRIB_LPRAZO',
-                                                                                        'TAXA_PERFM',
-                                                                                        'DT_PATRIM_LIQ',
-                                                                                        'DIRETOR',
-                                                                                        'ADMIN',
-                                                                                        'PF_PJ_GESTOR',
-                                                                                        'CPF_CNPJ_GESTOR',
-                                                                                        'GESTOR'])
-    
-    # Sample!
-    fi_cad_sample = fi_cad_sample.astype(str)
-    fi_cad_sample.applymap(lambda x: x.strip() if type(x)==str else x)
+        # Define um limite de 50MB para leituras dos arquivos na fonte.
+        csv.field_size_limit(500000)
 
-    # Sample!
-    fi_cad_sample.filter(items=['CNPJ_FUNDO']).head(50)
-    fi_cad_sample.filter(items=['SIT']).head(50)
-    fi_cad_sample.filter(items=['CLASSE']).head(50)   
-    fi_cad_sample.filter(items=['DT_INI_CLASSE']).head(50)    
-    fi_cad_sample.filter(items=['CONDOM']).head(50)       
-    fi_cad_sample.filter(items=['FUNDO_COTAS']).head(50)     
-    fi_cad_sample.filter(items=['FUNDO_EXCLUSIVO']).head(50) 
-    fi_cad_sample.filter(items=['INVEST_QUALIF']).head(50)  
-    fi_cad_sample.filter(items=['VL_PATRIM_LIQ']).head(50)
-    fi_cad_sample.filter(items=['CNPJ_ADMIN']).head(50)
-    
-    # Sample!
-    fi_cad_sample.filter(items=['CNPJ_FUNDO']).tail(50)
-    fi_cad_sample.filter(items=['SIT']).tail(50)
-    fi_cad_sample.filter(items=['CLASSE']).tail(50)   
-    fi_cad_sample.filter(items=['DT_INI_CLASSE']).tail(50)    
-    fi_cad_sample.filter(items=['CONDOM']).tail(50)       
-    fi_cad_sample.filter(items=['FUNDO_COTAS']).tail(50)     
-    fi_cad_sample.filter(items=['FUNDO_EXCLUSIVO']).tail(50) 
-    fi_cad_sample.filter(items=['INVEST_QUALIF']).tail(50)  
-    fi_cad_sample.filter(items=['VL_PATRIM_LIQ']).tail(50)
-    fi_cad_sample.filter(items=['CNPJ_ADMIN']).tail(50)
+        for files in range(0, len(files_list)):
+            # Lê cada arquivo da lista removendo as variáveis desnecessárias.
+            files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
+            files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'RENTAB_FUNDO',
+                                                      'TRIB_LPRAZO', 'TAXA_PERFM', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR',
+                                                      'GESTOR'])
+            files_sample = files_sample.compute()
 
-    # Sample!
-    fi_cad_sample[fi_cad_sample.CNPJ_FUNDO.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.SIT.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.CLASSE.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.DT_INI_CLASSE.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.CONDOM.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.FUNDO_COTAS.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.FUNDO_EXCLUSIVO.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.INVEST_QUALIF.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.VL_PATRIM_LIQ.str.contains('nan', regex=True, na=False)]
-    fi_cad_sample[fi_cad_sample.CNPJ_ADMIN.str.contains('nan', regex=True, na=False)]
+            # Remove subitens desnecessário considerando particularidades de algumas variável.
+            files_sample.drop(files_sample[files_sample.SIT == 'CANCELADA'].index, inplace=True)
+            files_sample.drop(files_sample[files_sample.SIT == 'FASE PRÉ-OPERACIONAL'].index, inplace=True)
+            files_sample.drop(files_sample[files_sample.CONDOM == 'Fechado'].index, inplace=True)
+            files_sample.drop(files_sample[files_sample.FUNDO_EXCLUSIVO == 'S'].index, inplace=True)
+            files_sample.drop(files_sample[files_sample.INVEST_QUALIF == 'S'].index, inplace=True)
 
-    # Remove 'vazios'!
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.CNPJ_FUNDO == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.SIT == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.CLASSE == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.DT_INI_CLASSE == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.CONDOM == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.FUNDO_COTAS == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.FUNDO_EXCLUSIVO == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.INVEST_QUALIF == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.VL_PATRIM_LIQ == ''].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.CNPJ_ADMIN == ''].index, inplace=True)
+            # Remove campos vazios de cada variável.
+            files_sample = files_sample.dropna(how='any', axis=0)
 
-    # Remove 'nan'!
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.SIT == 'nan'].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.CLASSE == 'nan'].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.VL_PATRIM_LIQ == 'nan'].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.CNPJ_ADMIN == 'nan'].index, inplace=True)
+            # Remove os espaços em brancos da base de dados.
+            files_sample = files_sample.applymap(lambda x: x.strip() if type(x)==str else x)
 
-    # Remove SIT!
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.SIT == 'CANCELADA'].index, inplace=True)
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.SIT == 'FASE PRÉ-OPERACIONAL'].index, inplace=True)
-
-    # Remove CONDOM!
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.CONDOM == 'Fechado'].index, inplace=True)
-
-    # Remove FUNDO_EXCLUSIVO!
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.FUNDO_EXCLUSIVO == 'S'].index, inplace=True)
-
-    # Remove INVEST_QUALIF!
-    fi_cad_sample.drop(fi_cad_sample[fi_cad_sample.INVEST_QUALIF == 'S'].index, inplace=True)
-
-    # Remove FUNDO_EXCLUSIVO e INVEST_QUALIF!
-    fi_cad_sample = fi_cad_sample.drop(columns=['FUNDO_EXCLUSIVO', 'INVEST_QUALIF'])
-    
-    # Carregar!
-    fi_cad_sample.to_csv( "fi_cad.csv", sep=';', index=False, encoding='utf-8-sig')
+            # Salva o arquivo transformado e limpo em seu respectivo diretório.
+            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')
 
 def f_load(set_wd):
     """
