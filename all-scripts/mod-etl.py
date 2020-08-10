@@ -54,9 +54,8 @@ def f_transform(set_wd):
         for files in range(0, len(files_list)):
             # Lê cada arquivo da lista removendo as variáveis desnecessárias.
             files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
-            files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'RENTAB_FUNDO',
-                                                      'TRIB_LPRAZO', 'TAXA_PERFM', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR',
-                                                      'GESTOR'])
+            files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'RENTAB_FUNDO', 'TRIB_LPRAZO', 
+                                                      'TAXA_PERFM', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR', 'GESTOR'])
             files_sample = files_sample.compute()
 
             # Remove subitens desnecessário considerando particularidades de algumas variável.
@@ -95,13 +94,7 @@ def f_load(set_wd):
         fi_cad.to_csv('fi_cad.csv', sep=';', index=False, encoding='utf-8-sig')
 
         # Validação dos dados.
-        print(fi_cad, 
-              fi_cad.dtypes, 
-              fi_cad.columns, 
-              fi_cad.count(), 
-              fi_cad.isnull().sum(), 
-              fi_cad.nunique(), 
-              fi_cad.shape)
+        print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
 
 def f_main():
     """
@@ -117,10 +110,8 @@ def f_main():
     cmd_args = parser.parse_args()
 
     # lista de urls para cada ano do cadastro geral de fundos de investimentos.
-    fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/']#,
-              #'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
-    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad']#,
-              #'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
+    fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
+    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [807, 46]
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
