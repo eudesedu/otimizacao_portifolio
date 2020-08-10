@@ -40,7 +40,7 @@ def f_transform(set_wd):
     """
     Aplica uma série de transformações aos dados extraídos para gerar o fluxo que será carregado.
     """
-    for path in range(0, 2):
+    for path in range(0, 1):
 
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
@@ -79,16 +79,29 @@ def f_load(set_wd):
     """
     Carrega a base de dados transformada.
     """
-    fi_cad = pd.read_csv('fi_cad.csv')
+    for path in range(0, 1):
 
-    # Validação
-    print(fi_cad, 
-          fi_cad.dtypes, 
-          fi_cad.columns, 
-          fi_cad.count(), 
-          fi_cad.isnull().sum(), 
-          fi_cad.nunique(), 
-          fi_cad.shape)
+        # Determina o diretório dos arquivos em cada enlace.
+        os.chdir(set_wd[path])
+
+        # Define um limite de 80MB para leitura dos arquivos da fonte pública.
+        csv.field_size_limit(800000)
+
+        # Lê e concatena todos os arquivos CSV do diretório.
+        fi_cad = dd.read_csv('*.csv')
+        fi_cad = fi_cad.compute()
+
+        # Salva os arquivos concatenados em seu respectivo diretório.
+        fi_cad.to_csv('fi_cad.csv', sep=';', index=False, encoding='utf-8-sig')
+
+        # Validação dos dados.
+        print(fi_cad, 
+              fi_cad.dtypes, 
+              fi_cad.columns, 
+              fi_cad.count(), 
+              fi_cad.isnull().sum(), 
+              fi_cad.nunique(), 
+              fi_cad.shape)
 
 def f_main():
     """
@@ -104,10 +117,10 @@ def f_main():
     cmd_args = parser.parse_args()
 
     # lista de urls para cada ano do cadastro geral de fundos de investimentos.
-    fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/',
-              'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
-    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad',
-              'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
+    fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/']#,
+              #'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
+    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad']#,
+              #'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [807, 46]
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
