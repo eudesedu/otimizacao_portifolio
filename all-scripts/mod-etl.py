@@ -83,9 +83,6 @@ def f_load(set_wd):
         # Determina o diretório dos arquivos em cada enlace.
         os.chdir(set_wd[path])
 
-        # Define um limite de 100MB para leitura dos arquivos da fonte pública.
-        csv.field_size_limit(1000000)
-
         # Lê e concatena todos os arquivos CSV do diretório.
         fi_cad = dd.read_csv('*.csv')
         fi_cad = fi_cad.compute()
