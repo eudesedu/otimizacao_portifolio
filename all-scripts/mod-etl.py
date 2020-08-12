@@ -95,8 +95,6 @@ def f_load(set_wd, year):
 
             # Validação dos dados.
             print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
-            # profile = ProfileReport(fi_cad, minimal=True)
-            # profile.to_file("output.html")
 
 def f_exploratory_data(set_wd):
     """
