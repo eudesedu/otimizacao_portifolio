@@ -56,7 +56,7 @@ def f_transform(set_wd):
             # Lê cada arquivo da lista removendo as variáveis desnecessárias.
             files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
             files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'RENTAB_FUNDO', 'TRIB_LPRAZO', 
-                                                      'TAXA_PERFM', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR', 'GESTOR'])
+                                                      'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR', 'GESTOR'])
             files_sample = files_sample.compute()
 
             # Remove subitens desnecessário considerando particularidades de algumas variável.
