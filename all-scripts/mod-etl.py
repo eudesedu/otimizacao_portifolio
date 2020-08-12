@@ -7,6 +7,7 @@ import pandas as pd
 import dask.dataframe as dd
 import glob
 import csv
+from pandas_profiling import ProfileReport
 
 def f_extract(fi_cad, set_wd, len_count):
     """
@@ -74,7 +75,7 @@ def f_transform(set_wd):
             # Salva o arquivo transformado e limpo em seu respectivo diretório.
             files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')
 
-def f_load(set_wd):
+def f_load(set_wd, year):
     """
     Carrega a base de dados transformada.
     """
@@ -83,15 +84,39 @@ def f_load(set_wd):
         # Determina o diretório dos arquivos em cada enlace.
         os.chdir(set_wd[path])
 
-        # Lê e concatena todos os arquivos CSV do diretório.
-        fi_cad = dd.read_csv('*.csv')
-        fi_cad = fi_cad.compute()
+        for step_year in range(0, 2):
+            # Lê e concatena todos os arquivos CSV do diretório.
+            fi_cad = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
+                               for files in glob.glob('*'+year[step_year]+'*.csv')], 
+                               ignore_index=True)
 
-        # Salva os arquivos concatenados em seu respectivo diretório.
-        fi_cad.to_csv('fi_cad.csv', sep=';', index=False, encoding='utf-8-sig')
+            # Salva os arquivos concatenados em seu respectivo diretório.
+            fi_cad.to_csv('fi_cad_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
-        # Validação dos dados.
-        print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
+            # Validação dos dados.
+            print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
+            # profile = ProfileReport(fi_cad, minimal=True)
+            # profile.to_file("output.html")
+
+def f_exploratory_data(set_wd):
+    """
+    Gera os relatórios das análises exploratórias de dados para cada base de dados.
+    """
+    for path in range(0, 1):
+
+        # Determina o diretório dos arquivos em cada enlace.
+        os.chdir(set_wd[path])
+
+        # Cria uma lista com os names dos arquivos com extenção CSV.
+        files_list = glob.glob('*fi_cad*.csv')
+
+        for files in range(0, len(files_list)):
+            # Lê e concatena todos os arquivos CSV do diretório.
+            fi_cad = pd.read_csv(files_list[files], sep=';', engine='python', encoding='utf-8-sig')
+
+            # Relatório das análises exploratórias de dados.
+            profile = ProfileReport(fi_cad, minimal=True)
+            profile.to_file('profiling'+files_list[files]+'.html')
 
 def f_main():
     """
@@ -104,12 +129,14 @@ def f_main():
     parser.add_argument('-extract', dest='extract', action='store_const', const=True, help='Call the f_extract function')
     parser.add_argument('-transform', dest='transform', action='store_const', const=True, help='Call the f_transform function')
     parser.add_argument('-load', dest='load', action='store_const', const=True, help='Call the f_load function')
+    parser.add_argument('-exploratory_data', dest='exploratory_data', action='store_const', const=True, help='Call the f_exploratory_data')
     cmd_args = parser.parse_args()
 
     # lista de urls para cada ano do cadastro geral de fundos de investimentos.
     fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [807, 46]
+    year = ['2017', '2018', '2019', '2020']
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
@@ -117,7 +144,9 @@ def f_main():
     if cmd_args.transform: 
         f_transform(set_wd)
     if cmd_args.load: 
-        f_load(set_wd)
+        f_load(set_wd, year)
+    if cmd_args.exploratory_data:
+        f_exploratory_data(set_wd)
 
 if __name__ == '__main__':
     f_main()
