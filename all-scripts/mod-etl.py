@@ -37,34 +37,39 @@ def f_extract(fi_cad, set_wd, len_count):
             fi_cad_csv_file.write(url_content)
             fi_cad_csv_file.close()
 
-def f_transform(set_wd):
+def f_transform(set_wd, file_member):
     """
     Aplica uma série de transformações aos dados extraídos para gerar o fluxo que será carregado.
     """
-    for path in range(0, 1):
+    for path in range(0, 2):
 
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
 
         # Cria uma lista com os names dos arquivos com extenção CSV.
-        files_list = glob.glob('*.csv')
+        files_list = glob.glob('*'+file_member[path]+'*.csv')
 
         # Define um limite de 50MB para leitura dos arquivos da fonte pública.
         csv.field_size_limit(500000)
 
         for files in range(0, len(files_list)):
             # Lê cada arquivo da lista removendo as variáveis desnecessárias.
-            files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
-            files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'RENTAB_FUNDO', 'TRIB_LPRAZO', 
-                                                      'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR', 'GESTOR'])
-            files_sample = files_sample.compute()
+            if set_wd[path] == set_wd[0]:
+                files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
+                files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'RENTAB_FUNDO', 'TRIB_LPRAZO', 
+                                                          'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR', 'GESTOR'])
+                files_sample = files_sample.compute()
 
-            # Remove subitens desnecessário considerando particularidades de algumas variável.
-            files_sample.drop(files_sample[files_sample.SIT == 'CANCELADA'].index, inplace=True)
-            files_sample.drop(files_sample[files_sample.SIT == 'FASE PRÉ-OPERACIONAL'].index, inplace=True)
-            files_sample.drop(files_sample[files_sample.CONDOM == 'Fechado'].index, inplace=True)
-            files_sample.drop(files_sample[files_sample.FUNDO_EXCLUSIVO == 'S'].index, inplace=True)
-            files_sample.drop(files_sample[files_sample.INVEST_QUALIF == 'S'].index, inplace=True)
+                # Remove subitens desnecessário considerando particularidades de algumas variável.
+                files_sample.drop(files_sample[files_sample.SIT == 'CANCELADA'].index, inplace=True)
+                files_sample.drop(files_sample[files_sample.SIT == 'FASE PRÉ-OPERACIONAL'].index, inplace=True)
+                files_sample.drop(files_sample[files_sample.CONDOM == 'Fechado'].index, inplace=True)
+                files_sample.drop(files_sample[files_sample.FUNDO_EXCLUSIVO == 'S'].index, inplace=True)
+                files_sample.drop(files_sample[files_sample.INVEST_QUALIF == 'S'].index, inplace=True)
+            else:
+                files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
+                files_sample = files_sample.compute()
+                files_sample = files_sample.drop(columns=['CAPTC_DIA', 'RESG_DIA'])
 
             # Remove campos vazios de cada variável.
             files_sample = files_sample.dropna(how='any', axis=0)
@@ -73,7 +78,7 @@ def f_transform(set_wd):
             files_sample = files_sample.applymap(lambda x: x.strip() if type(x)==str else x)
 
             # Salva o arquivo transformado e limpo em seu respectivo diretório.
-            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')
+            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')    
 
 def f_load(set_wd, year):
     """
@@ -134,13 +139,14 @@ def f_main():
     fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [807, 46]
+    file_member = ['inf_cadastral', 'inf_diario_fi'] 
     year = ['2017', '2018', '2019', '2020']
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
         f_extract(fi_cad, set_wd, len_count)
     if cmd_args.transform: 
-        f_transform(set_wd)
+        f_transform(set_wd, file_member)
     if cmd_args.load: 
         f_load(set_wd, year)
     if cmd_args.exploratory_data:
@@ -149,3 +155,4 @@ def f_main():
 if __name__ == '__main__':
     f_main()
     sys.exit(0)
+        
