@@ -23,7 +23,7 @@ def f_extract(fi_cad, set_wd, len_count):
         fi_cad_data = requests.get(fi_cad[path]).content
         fi_cad_soup = BeautifulSoup(fi_cad_data, 'html.parser')
 
-        # Encontre e registra em lista o nome dos arquivos.
+        # Encontra e registra em lista o nome dos arquivos.
         for link in fi_cad_soup.find_all('a'):
             fi_cad_csv.append(link.get('href'))
         inf_cadastral_fi = fi_cad_csv[len(fi_cad_csv)-(len_count[path]):(len(fi_cad_csv)-2)]
