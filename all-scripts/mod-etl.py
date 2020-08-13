@@ -119,7 +119,8 @@ def f_exploratory_data(set_wd):
 
             # Relatório das análises exploratórias de dados.
             profile = ProfileReport(fi_cad, minimal=True)
-            profile.to_file('profiling'+files_list[files]+'.html')
+
+            profile.to_file('profiling_'+files_list[files]+'.html')
 
 def f_main():
     """
