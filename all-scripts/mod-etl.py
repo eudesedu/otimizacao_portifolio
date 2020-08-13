@@ -101,17 +101,17 @@ def f_load(set_wd, file_load, year):
             # Validação dos dados.
             print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
 
-def f_exploratory_data(set_wd):
+def f_exploratory_data(set_wd, file_load):
     """
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
-    for path in range(0, 1):
+    for path in range(0, 2):
 
         # Determina o diretório dos arquivos em cada enlace.
         os.chdir(set_wd[path])
 
         # Cria uma lista com os names dos arquivos com extenção CSV.
-        files_list = glob.glob('*fi_cad*.csv')
+        files_list = glob.glob('*'+file_load[path]+'*.csv')
 
         for files in range(0, len(files_list)):
             # Lê e concatena todos os arquivos CSV do diretório.
