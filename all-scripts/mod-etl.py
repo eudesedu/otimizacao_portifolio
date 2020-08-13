@@ -70,7 +70,7 @@ def f_transform(set_wd, year):
             else:
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
                 files_sample = files_sample.compute()
-                files_sample = files_sample.drop(columns=['CAPTC_DIA', 'RESG_DIA'])
+                files_sample = files_sample.drop(columns=['VL_TOTAL','CAPTC_DIA', 'RESG_DIA'])
 
             # Remove campos vazios de cada variável.
             files_sample = files_sample.dropna(how='any', axis=0)
