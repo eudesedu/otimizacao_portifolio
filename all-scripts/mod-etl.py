@@ -9,7 +9,7 @@ import glob
 import csv
 from pandas_profiling import ProfileReport
 
-def f_extract(fi_cad, set_wd, len_count):
+def f_extract(df_fi, set_wd, len_count):
     """
     Extrai os dados da fonte pública - Comissão de Valores Mobiliários (CVM).
     """
@@ -19,23 +19,23 @@ def f_extract(fi_cad, set_wd, len_count):
         os.chdir(set_wd[path])
 
         # Registra em memória as informações dos arquivos a partir da página html da fonte pública.
-        fi_cad_csv = []
-        fi_cad_data = requests.get(fi_cad[path]).content
-        fi_cad_soup = BeautifulSoup(fi_cad_data, 'html.parser')
+        df_fi_csv = []
+        df_fi_data = requests.get(df_fi[path]).content
+        df_fi_soup = BeautifulSoup(df_fi_data, 'html.parser')
 
         # Encontra e registra em lista o nome dos arquivos.
-        for link in fi_cad_soup.find_all('a'):
-            fi_cad_csv.append(link.get('href'))
-        inf_cadastral_fi = fi_cad_csv[len(fi_cad_csv)-(len_count[path]):(len(fi_cad_csv)-2)]
+        for link in df_fi_soup.find_all('a'):
+            df_fi_csv.append(link.get('href'))
+        inf_cadastral_fi = df_fi_csv[len(df_fi_csv)-(len_count[path]):(len(df_fi_csv)-2)]
 
         # Salva todos os arquivos em seus respectivos diretórios.
         for files in range(0, len(inf_cadastral_fi)):
-            fi_cad_csv_url = fi_cad[path]+inf_cadastral_fi[files]
-            url_response = requests.get(fi_cad_csv_url)
+            df_fi_csv_url = df_fi[path]+inf_cadastral_fi[files]
+            url_response = requests.get(df_fi_csv_url)
             url_content = url_response.content
-            fi_cad_csv_file = open(inf_cadastral_fi[files], 'wb')
-            fi_cad_csv_file.write(url_content)
-            fi_cad_csv_file.close()
+            df_fi_csv_file = open(inf_cadastral_fi[files], 'wb')
+            df_fi_csv_file.write(url_content)
+            df_fi_csv_file.close()
 
 def f_transform(set_wd, year):
     """
@@ -92,15 +92,15 @@ def f_load(set_wd, file_load, year):
 
         for step_year in range(0, 2):
             # Lê e concatena todos os arquivos CSV do diretório.
-            fi_cad = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
+            df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
                                for files in glob.glob('*'+year[step_year]+'*.csv')], 
                                ignore_index=True)
 
             # Salva os arquivos concatenados em seu respectivo diretório.
-            fi_cad.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+            df_fi.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
             # Validação dos dados.
-            print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
+            print(df_fi, df_fi.dtypes, df_fi.columns, df_fi.count(), df_fi.isnull().sum(), df_fi.nunique(), df_fi.shape)
 
 def f_exploratory_data(set_wd, file_load):
     """
@@ -116,10 +116,10 @@ def f_exploratory_data(set_wd, file_load):
 
         for files in range(0, len(files_list)):
             # Lê e concatena todos os arquivos CSV do diretório.
-            fi_cad = pd.read_csv(files_list[files], sep=';', engine='python', encoding='utf-8-sig')
+            df_fi = pd.read_csv(files_list[files], sep=';', engine='python', encoding='utf-8-sig')
 
             # Relatório das análises exploratórias de dados.
-            profile = ProfileReport(fi_cad, minimal=True)
+            profile = ProfileReport(df_fi, minimal=True)
 
             profile.to_file('profiling_'+files_list[files][0:11]+'.html')
 
@@ -138,7 +138,7 @@ def f_main():
     cmd_args = parser.parse_args()
 
     # lista de urls para cada ano do cadastro geral de fundos de investimentos.
-    fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
+    df_fi = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [807, 46]
     file_load = ['fi_cad', 'fi_diario']
@@ -146,7 +146,7 @@ def f_main():
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
-        f_extract(fi_cad, set_wd, len_count)
+        f_extract(df_fi, set_wd, len_count)
     if cmd_args.transform: 
         f_transform(set_wd, year)
     if cmd_args.load:
@@ -154,7 +154,7 @@ def f_main():
     if cmd_args.exploratory_data:
         f_exploratory_data(set_wd, file_load)
 
-    # test=fi_diario.merge(fi_cad, left_index=True, right_index=True)
+    # test=fi_diario.merge(, left_index=True, right_index=True)
     # CNPJ_FUNDO=pd.Series(list(set(a).intersection(set(b))))
 
 if __name__ == '__main__':
