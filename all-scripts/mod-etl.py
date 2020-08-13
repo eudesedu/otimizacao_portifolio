@@ -37,7 +37,7 @@ def f_extract(fi_cad, set_wd, len_count):
             fi_cad_csv_file.write(url_content)
             fi_cad_csv_file.close()
 
-def f_transform(set_wd, file_load):
+def f_transform(set_wd, year):
     """
     Aplica uma série de transformações aos dados extraídos para gerar o fluxo que será carregado.
     """
@@ -47,7 +47,7 @@ def f_transform(set_wd, file_load):
         os.chdir(set_wd[path])
 
         # Cria uma lista com os names dos arquivos com extenção CSV.
-        files_list = glob.glob('*'+file_load[path]+'*.csv')
+        files_list = glob.glob('*'+year[path]+'*.csv')
 
         # Define um limite de 50MB para leitura dos arquivos da fonte pública.
         csv.field_size_limit(500000)
@@ -57,8 +57,8 @@ def f_transform(set_wd, file_load):
             if set_wd[path] == set_wd[0]:
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
                 files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'DT_INI_CLASSE', 'RENTAB_FUNDO', 
-                                                          'TRIB_LPRAZO', 'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR',
-                                                          'GESTOR'])
+                                                          'TRIB_LPRAZO', 'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'CNPJ_ADMIN', 'ADMIN', 
+                                                          'PF_PJ_GESTOR', 'CPF_CNPJ_GESTOR', 'GESTOR'])
                 files_sample = files_sample.compute()
 
                 # Remove subitens desnecessário considerando particularidades de algumas variável.
@@ -142,13 +142,13 @@ def f_main():
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [807, 46]
     file_load = ['fi_cad', 'fi_diario']
-    year = ['2017', '2018', '2019', '2020']
+    year = ['2017', '2017']
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
         f_extract(fi_cad, set_wd, len_count)
     if cmd_args.transform: 
-        f_transform(set_wd, file_load)
+        f_transform(set_wd, year)
     if cmd_args.load:
         f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
