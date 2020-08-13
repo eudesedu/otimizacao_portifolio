@@ -56,8 +56,9 @@ def f_transform(set_wd, file_load):
             # Lê cada arquivo da lista removendo as variáveis desnecessárias.
             if set_wd[path] == set_wd[0]:
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
-                files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'RENTAB_FUNDO', 'TRIB_LPRAZO', 
-                                                          'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR', 'GESTOR'])
+                files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'DT_INI_CLASSE', 'RENTAB_FUNDO', 
+                                                          'TRIB_LPRAZO', 'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'ADMIN', 'PF_PJ_GESTOR',
+                                                          'GESTOR'])
                 files_sample = files_sample.compute()
 
                 # Remove subitens desnecessário considerando particularidades de algumas variável.
@@ -78,7 +79,7 @@ def f_transform(set_wd, file_load):
             files_sample = files_sample.applymap(lambda x: x.strip() if type(x)==str else x)
 
             # Salva o arquivo transformado e limpo em seu respectivo diretório.
-            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')    
+            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')
 
 def f_load(set_wd, file_load, year):
     """
@@ -120,7 +121,7 @@ def f_exploratory_data(set_wd, file_load):
             # Relatório das análises exploratórias de dados.
             profile = ProfileReport(fi_cad, minimal=True)
 
-            profile.to_file('profiling_'+files_list[files]+'.html')
+            profile.to_file('profiling_'+files_list[files][0:11]+'.html')
 
 def f_main():
     """
@@ -140,7 +141,7 @@ def f_main():
     fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [807, 46]
-    file_load = ['fi_cad', 'fi_diario'] 
+    file_load = ['fi_cad', 'fi_diario']
     year = ['2017', '2018', '2019', '2020']
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
@@ -148,10 +149,13 @@ def f_main():
         f_extract(fi_cad, set_wd, len_count)
     if cmd_args.transform: 
         f_transform(set_wd, file_load)
-    if cmd_args.load: 
+    if cmd_args.load:
         f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
         f_exploratory_data(set_wd, file_load)
+
+    # test=fi_diario.merge(fi_cad, left_index=True, right_index=True)
+    # CNPJ_FUNDO=pd.Series(list(set(a).intersection(set(b))))
 
 if __name__ == '__main__':
     f_main()
