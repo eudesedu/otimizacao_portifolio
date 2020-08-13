@@ -151,7 +151,7 @@ def f_main():
     if cmd_args.load: 
         f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
-        f_exploratory_data(set_wd)
+        f_exploratory_data(set_wd, file_load)
 
 if __name__ == '__main__':
     f_main()
