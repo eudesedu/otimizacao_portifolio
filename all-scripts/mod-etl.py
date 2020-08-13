@@ -92,9 +92,15 @@ def f_load(set_wd, file_load, year):
 
         for step_year in range(0, 2):
             # Lê e concatena todos os arquivos CSV do diretório.
-            df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
-                               for files in glob.glob('*'+year[step_year]+'*.csv')], 
-                               ignore_index=True)
+            if set_wd[path] == set_wd[0]:
+                df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
+                                  for files in glob.glob('*'+year[step_year]+'*.csv')], 
+                                  ignore_index=True)
+                df_fi = df_fi.drop_duplicates('CNPJ_FUNDO')
+            else:
+                df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
+                                  for files in glob.glob('*'+year[step_year]+'*.csv')], 
+                                  ignore_index=True)
 
             # Salva os arquivos concatenados em seu respectivo diretório.
             df_fi.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
