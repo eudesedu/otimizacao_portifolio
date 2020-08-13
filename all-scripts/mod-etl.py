@@ -37,7 +37,7 @@ def f_extract(fi_cad, set_wd, len_count):
             fi_cad_csv_file.write(url_content)
             fi_cad_csv_file.close()
 
-def f_transform(set_wd, file_member):
+def f_transform(set_wd, file_load):
     """
     Aplica uma série de transformações aos dados extraídos para gerar o fluxo que será carregado.
     """
@@ -47,7 +47,7 @@ def f_transform(set_wd, file_member):
         os.chdir(set_wd[path])
 
         # Cria uma lista com os names dos arquivos com extenção CSV.
-        files_list = glob.glob('*'+file_member[path]+'*.csv')
+        files_list = glob.glob('*'+file_load[path]+'*.csv')
 
         # Define um limite de 50MB para leitura dos arquivos da fonte pública.
         csv.field_size_limit(500000)
@@ -80,11 +80,11 @@ def f_transform(set_wd, file_member):
             # Salva o arquivo transformado e limpo em seu respectivo diretório.
             files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')    
 
-def f_load(set_wd, year):
+def f_load(set_wd, file_load, year):
     """
     Carrega a base de dados transformada.
     """
-    for path in range(0, 1):
+    for path in range(0, 2):
 
         # Determina o diretório dos arquivos em cada enlace.
         os.chdir(set_wd[path])
@@ -96,7 +96,7 @@ def f_load(set_wd, year):
                                ignore_index=True)
 
             # Salva os arquivos concatenados em seu respectivo diretório.
-            fi_cad.to_csv('fi_cad_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+            fi_cad.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
             # Validação dos dados.
             print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
@@ -140,16 +140,16 @@ def f_main():
     fi_cad = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [807, 46]
-    file_member = ['inf_cadastral', 'inf_diario_fi'] 
+    file_load = ['fi_cad', 'fi_diario'] 
     year = ['2017', '2018', '2019', '2020']
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
         f_extract(fi_cad, set_wd, len_count)
     if cmd_args.transform: 
-        f_transform(set_wd, file_member)
+        f_transform(set_wd, file_load)
     if cmd_args.load: 
-        f_load(set_wd, year)
+        f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
         f_exploratory_data(set_wd)
 
