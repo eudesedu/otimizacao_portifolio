@@ -154,6 +154,11 @@ def f_exploratory_data(set_wd, file_load):
     fi_profile = ProfileReport(fi_profile, minimal=True)
     fi_profile.to_file('fi_geral_profile.html')
 
+def f_regression_model(set_wd):
+    """
+    Modelo baseado em regressão linear múltipla para variável resposta: Valor da Cota (VL_QUOTA).
+    """
+
 def f_main():
     """
     Configuração do ambiente e definição dos argumentos para chamada das funções.
@@ -166,6 +171,7 @@ def f_main():
     parser.add_argument('-transform', dest='transform', action='store_const', const=True, help='Call the f_transform function')
     parser.add_argument('-load', dest='load', action='store_const', const=True, help='Call the f_load function')
     parser.add_argument('-exploratory_data', dest='exploratory_data', action='store_const', const=True, help='Call the f_exploratory_data')
+    parser.add_argument('-regression_model', dest='regression_model', action='store_const', const=True, help='Call the f_regression_model')
     cmd_args = parser.parse_args()
 
     # lista de urls para cada ano do cadastro geral de fundos de investimentos.
@@ -174,7 +180,7 @@ def f_main():
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_df']
     len_count = [807, 46]
     file_load = ['fi_cad', 'fi_diario']
-    year = ['2017', '2017']
+    year = ['2020', '2020']
 
     # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
@@ -185,6 +191,8 @@ def f_main():
         f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
         f_exploratory_data(set_wd, file_load)
+    if cmd_args.regression_model:
+        f_regression_model(set_wd)
 
 if __name__ == '__main__':
     f_main()
