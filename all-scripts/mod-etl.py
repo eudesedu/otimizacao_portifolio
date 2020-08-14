@@ -7,6 +7,7 @@ import pandas as pd
 import dask.dataframe as dd
 import glob
 import csv
+import numpy as np
 from pandas_profiling import ProfileReport
 
 def f_extract(df_fi, set_wd, len_count):
@@ -71,6 +72,9 @@ def f_transform(set_wd, year):
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
                 files_sample = files_sample.compute()
                 files_sample = files_sample.drop(columns=['VL_TOTAL','CAPTC_DIA', 'RESG_DIA'])
+                files_sample['VL_QUOTA'] = files_sample['VL_QUOTA'].astype('float16')
+                files_sample['VL_PATRIM_LIQ'] = files_sample['VL_PATRIM_LIQ'].astype('float32')
+                files_sample['NR_COTST'] = files_sample['NR_COTST'].astype(np.uint16)
 
             # Remove campos vazios de cada variável.
             files_sample = files_sample.dropna(how='any', axis=0)
@@ -85,6 +89,7 @@ def f_load(set_wd, file_load, year):
     """
     Carrega a base de dados transformada.
     """
+    var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST']
     for path in range(0, 2):
 
         # Determina o diretório dos arquivos em cada enlace.
@@ -98,7 +103,9 @@ def f_load(set_wd, file_load, year):
                                   ignore_index=True)
                 df_fi = df_fi.drop_duplicates('CNPJ_FUNDO')
             else:
-                df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
+                df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
+                                                                                                                                'VL_PATRIM_LIQ': 'float32',
+                                                                                                                                'NR_COTST': np.uint16})
                                   for files in glob.glob('*'+year[step_year]+'*.csv')], 
                                   ignore_index=True)
 
@@ -159,9 +166,6 @@ def f_main():
         f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
         f_exploratory_data(set_wd, file_load)
-
-    # test=fi_diario.merge(, left_index=True, right_index=True)
-    # CNPJ_FUNDO=pd.Series(list(set(a).intersection(set(b))))
 
 if __name__ == '__main__':
     f_main()
