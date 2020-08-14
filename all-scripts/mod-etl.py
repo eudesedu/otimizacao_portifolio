@@ -57,8 +57,8 @@ def f_transform(set_wd, year):
             # Lê cada arquivo da lista removendo as variáveis desnecessárias.
             if set_wd[path] == set_wd[0]:
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
-                files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'DT_INI_CLASSE', 'RENTAB_FUNDO', 
-                                                          'TRIB_LPRAZO', 'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'CNPJ_ADMIN', 'ADMIN', 
+                files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'DT_INI_CLASSE', 'RENTAB_FUNDO',
+                                                          'TRIB_LPRAZO', 'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'CNPJ_ADMIN', 'ADMIN',
                                                           'PF_PJ_GESTOR', 'CPF_CNPJ_GESTOR', 'GESTOR'])
                 files_sample = files_sample.compute()
 
@@ -96,21 +96,23 @@ def f_load(set_wd, file_load, year):
         os.chdir(set_wd[path])
 
         for step_year in range(0, 2):
-            # Lê e concatena todos os arquivos CSV do diretório.
+            # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
             if set_wd[path] == set_wd[0]:
                 df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
                                   for files in glob.glob('*'+year[step_year]+'*.csv')], 
                                   ignore_index=True)
                 df_fi = df_fi.drop_duplicates('CNPJ_FUNDO')
-            else:
+
+            # Lê e concatena todos os arquivos CSV do diretório - fi_diario.
+            if set_wd[path] == set_wd[1]:
                 df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
                                                                                                                                 'VL_PATRIM_LIQ': 'float32',
                                                                                                                                 'NR_COTST': np.uint16})
-                                  for files in glob.glob('*'+year[step_year]+'*.csv')], 
+                                  for files in glob.glob('*'+year[step_year]+'*.csv')],
                                   ignore_index=True)
 
             # Salva os arquivos concatenados em seu respectivo diretório.
-            df_fi.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+            df_fi.to_csv(file_load[path]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
             # Validação dos dados.
             print(df_fi, df_fi.dtypes, df_fi.columns, df_fi.count(), df_fi.isnull().sum(), df_fi.nunique(), df_fi.shape)
