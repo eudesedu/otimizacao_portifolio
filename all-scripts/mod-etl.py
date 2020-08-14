@@ -9,6 +9,7 @@ import glob
 import csv
 import numpy as np
 from pandas_profiling import ProfileReport
+from sklearn import linear_model
 
 def f_extract(df_fi, set_wd, len_count):
     """
@@ -158,6 +159,67 @@ def f_regression_model(set_wd):
     """
     Modelo baseado em regressão linear múltipla para variável resposta: Valor da Cota (VL_QUOTA).
     """
+    # Lista as variáveis da base de dados.
+    var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST', 'DENOM_SOCIAL', 'SIT', 'CLASSE',
+                'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
+
+    # Determina o diretório da base de dados transformada - 2017.
+    os.chdir(set_wd[2]+'\\2017')
+
+    fi_geral_2017 = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
+                                                                                                                          'VL_PATRIM_LIQ': 'float32',
+                                                                                                                          'NR_COTST': np.uint16})
+    fi_geral_2017 = fi_geral_2017.loc[fi_geral_2017['CNPJ_FUNDO'] == '11.052.478/0001-81']
+
+    # Determina o diretório da base de dados transformada - 2018.
+    os.chdir(set_wd[2]+'\\2018')
+
+    fi_geral_2018 = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
+                                                                                                                          'VL_PATRIM_LIQ': 'float32',
+                                                                                                                          'NR_COTST': np.uint16})
+    fi_geral_2018 = fi_geral_2018.loc[fi_geral_2018['CNPJ_FUNDO'] == '11.052.478/0001-81']
+
+    # Determina o diretório da base de dados transformada - 2019.
+    os.chdir(set_wd[2]+'\\2019')
+
+    fi_geral_2019 = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
+                                                                                                                          'VL_PATRIM_LIQ': 'float32',
+                                                                                                                          'NR_COTST': np.uint16})
+    fi_geral_2019 = fi_geral_2019.loc[fi_geral_2019['CNPJ_FUNDO'] == '11.052.478/0001-81']
+
+    # Determina o diretório da base de dados transformada - 2020.
+    os.chdir(set_wd[2]+'\\2020')
+
+    fi_geral_2020 = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
+                                                                                                                          'VL_PATRIM_LIQ': 'float32',
+                                                                                                                          'NR_COTST': np.uint16})
+    fi_geral_2020 = fi_geral_2020.loc[fi_geral_2020['CNPJ_FUNDO'] == '11.052.478/0001-81']
+
+    # Base geral para os cálculos do modelo.
+    fi_geral_modelo = pd.concat([fi_geral_2017, fi_geral_2018, fi_geral_2019, fi_geral_2020])
+
+    # Salva os a base de dados transformada em seu respectivo diretório.
+    fi_geral_modelo.to_csv('fi_geral_modelo.csv', sep=';', index=False, encoding='utf-8-sig')
+
+    # Prepara a base para os cálculos do modelo.
+    fi_geral_modelo = fi_geral_modelo.drop(columns=['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS',
+                                                    'FUNDO_EXCLUSIVO', 'INVEST_QUALIF'])
+    
+    x = fi_geral_modelo[['VL_PATRIM_LIQ', 'NR_COTST']]
+    y = fi_geral_modelo['VL_QUOTA']
+
+    # Regressão multipla utilizando a biblioteca sklearn
+    regression = linear_model.LinearRegression().fit(x, y)
+    print('Intercept: ', regression.intercept_, '| Coefficients: ', regression.coef_)
+
+    # Previsões:
+    patrimonio_liquido = 60240396.0
+    cotistas = 385
+    print ('Resultado: ', regression.predict([[patrimonio_liquido, cotistas]]))
+
+    patrimonio_liquido = 665332160.0
+    cotistas = 13841
+    print ('Resultado: ', regression.predict([[patrimonio_liquido, cotistas]]))
 
 def f_main():
     """
