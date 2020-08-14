@@ -98,45 +98,61 @@ def f_load(set_wd, file_load, year):
         for step_year in range(0, 2):
             # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
             if set_wd[path] == set_wd[0]:
-                df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
+                fi_cad = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
                                   for files in glob.glob('*'+year[step_year]+'*.csv')], 
                                   ignore_index=True)
-                df_fi = df_fi.drop_duplicates('CNPJ_FUNDO')
+                
+                # Remove linhas repetidas.
+                fi_cad = fi_cad.drop_duplicates('CNPJ_FUNDO')
+
+                # Salva os arquivos concatenados em seu respectivo diretório.
+                fi_cad.to_csv(file_load[path]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+
+                # Validação dos dados.
+                print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
 
             # Lê e concatena todos os arquivos CSV do diretório - fi_diario.
             if set_wd[path] == set_wd[1]:
-                df_fi = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
-                                                                                                                                'VL_PATRIM_LIQ': 'float32',
-                                                                                                                                'NR_COTST': np.uint16})
-                                  for files in glob.glob('*'+year[step_year]+'*.csv')],
-                                  ignore_index=True)
+                fi_diario = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
+                                                                                                                                    'VL_PATRIM_LIQ': 'float32',
+                                                                                                                                    'NR_COTST': np.uint16})
+                                      for files in glob.glob('*'+year[step_year]+'*.csv')],
+                                      ignore_index=True)
 
-            # Salva os arquivos concatenados em seu respectivo diretório.
-            df_fi.to_csv(file_load[path]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                # Salva os arquivos concatenados em seu respectivo diretório.
+                fi_diario.to_csv(file_load[path]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
-            # Validação dos dados.
-            print(df_fi, df_fi.dtypes, df_fi.columns, df_fi.count(), df_fi.isnull().sum(), df_fi.nunique(), df_fi.shape)
+                # Validação dos dados.
+                print(fi_diario, fi_diario.dtypes, fi_diario.columns, fi_diario.count(), fi_diario.isnull().sum(), fi_diario.nunique(), fi_diario.shape)
+
+    fi_df = fi_diario.merge(fi_cad, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO')
+
+    # Validação dos dados.
+    print(fi_df, fi_df.dtypes, fi_df.columns, fi_df.count(), fi_df.isnull().sum(), fi_df.nunique(), fi_df.shape)
+
+    # Determina o diretório da base de dados transformada.
+    os.chdir(set_wd[2])
+
+    # Salva os a base de dados transformada em seu respectivo diretório.
+    fi_df.to_csv('fi_geral.csv', sep=';', index=False, encoding='utf-8-sig')
 
 def f_exploratory_data(set_wd, file_load):
     """
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
-    for path in range(0, 2):
+    # Determina o diretório da base de dados transformada.
+    os.chdir(set_wd[2])
 
-        # Determina o diretório dos arquivos em cada enlace.
-        os.chdir(set_wd[path])
+    # Lê a base de dados geral no diretório - fi_df.
+    var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST', 'DENOM_SOCIAL', 'SIT', 'CLASSE',
+                'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
+    fi_profile = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
+                                                                                                                       'VL_PATRIM_LIQ': 'float32',
+                                                                                                                       'NR_COTST': np.uint16})
 
-        # Cria uma lista com os names dos arquivos com extenção CSV.
-        files_list = glob.glob('*'+file_load[path]+'*.csv')
-
-        for files in range(0, len(files_list)):
-            # Lê e concatena todos os arquivos CSV do diretório.
-            df_fi = pd.read_csv(files_list[files], sep=';', engine='python', encoding='utf-8-sig')
-
-            # Relatório das análises exploratórias de dados.
-            profile = ProfileReport(df_fi, minimal=True)
-
-            profile.to_file('profiling_'+files_list[files][0:11]+'.html')
+    # Relatório das análises exploratórias de dados.
+    fi_profile = ProfileReport(fi_profile, minimal=True)
+    fi_profile.to_file('fi_geral_profile.html')
 
 def f_main():
     """
@@ -154,7 +170,8 @@ def f_main():
 
     # lista de urls para cada ano do cadastro geral de fundos de investimentos.
     df_fi = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
-    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
+    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario',
+              'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_df']
     len_count = [807, 46]
     file_load = ['fi_cad', 'fi_diario']
     year = ['2017', '2017']
