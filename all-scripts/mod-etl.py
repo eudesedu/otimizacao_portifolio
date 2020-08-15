@@ -250,9 +250,9 @@ def f_main():
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_df']
     len_count = [807, 46]
     file_load = ['fi_cad', 'fi_diario']
-    year = ['2020', '2020']
+    year = ['2017', '2017', '2018', '2018', '2019', '2019', '2020', '2020']
 
-    # Define os arqgumentos e variáveis como parâmetros de entrada para funções.
+    # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
         f_extract(df_fi, set_wd, len_count)
     if cmd_args.transform: 
