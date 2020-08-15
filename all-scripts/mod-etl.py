@@ -10,6 +10,7 @@ import csv
 import numpy as np
 from pandas_profiling import ProfileReport
 from sklearn import linear_model
+import statsmodels.api as sm
 
 def f_extract(df_fi, set_wd, len_count):
     """
@@ -220,6 +221,13 @@ def f_regression_model(set_wd):
     patrimonio_liquido = 665332160.0
     cotistas = 13841
     print ('Resultado: ', regression.predict([[patrimonio_liquido, cotistas]]))
+
+    # Regressão multipla utilizando a biblioteca statsmodels
+    x = sm.add_constant(x)
+    regression_model = sm.OLS(y, x).fit()
+    regression_model.predict(x) 
+    regression_model = regression_model.summary()
+    print(regression_model)
 
 def f_main():
     """
