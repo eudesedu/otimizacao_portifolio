@@ -244,7 +244,7 @@ def f_main():
     parser.add_argument('-regression_model', dest='regression_model', action='store_const', const=True, help='Call the f_regression_model')
     cmd_args = parser.parse_args()
 
-    # lista de urls para cada ano do cadastro geral de fundos de investimentos.
+    # Lista de constantes como parâmetros de entrada.
     df_fi = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario',
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_df']
