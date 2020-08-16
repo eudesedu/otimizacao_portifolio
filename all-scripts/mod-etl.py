@@ -103,7 +103,7 @@ def f_load(set_wd, file_load, year):
                 fi_cad = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
                                   for files in glob.glob('*'+year[step_year]+'*.csv')], 
                                   ignore_index=True)
-                
+
                 # Remove linhas repetidas.
                 fi_cad = fi_cad.drop_duplicates('CNPJ_FUNDO')
 
@@ -183,7 +183,7 @@ def f_regression_model(set_wd, year):
     # Prepara a base para os cálculos do modelo.
     fi_geral_modelo = fi_geral_modelo.drop(columns=['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS',
                                                     'FUNDO_EXCLUSIVO', 'INVEST_QUALIF'])
-    
+
     x = fi_geral_modelo[['VL_PATRIM_LIQ', 'NR_COTST']]
     y = fi_geral_modelo['VL_QUOTA']
 
@@ -246,4 +246,3 @@ def f_main():
 if __name__ == '__main__':
     f_main()
     sys.exit(0)
-        
