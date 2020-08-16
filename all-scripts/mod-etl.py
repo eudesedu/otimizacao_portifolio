@@ -156,7 +156,7 @@ def f_exploratory_data(set_wd, file_load):
     fi_profile = ProfileReport(fi_profile, minimal=True)
     fi_profile.to_file('fi_geral_profile.html')
 
-def f_regression_model(set_wd):
+def f_regression_model(set_wd, year):
     """
     Modelo baseado em regressão linear múltipla para variável resposta: Valor da Cota (VL_QUOTA).
     """
@@ -164,43 +164,21 @@ def f_regression_model(set_wd):
     var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST', 'DENOM_SOCIAL', 'SIT', 'CLASSE',
                 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
 
-    # Determina o diretório da base de dados transformada - 2017.
-    os.chdir(set_wd[2]+'\\2017')
+    fi_geral_modelo = pd.DataFrame()
+    for step_year in range(0, 4):
 
-    fi_geral_2017 = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
-                                                                                                                          'VL_PATRIM_LIQ': 'float32',
-                                                                                                                          'NR_COTST': np.uint16})
-    fi_geral_2017 = fi_geral_2017.loc[fi_geral_2017['CNPJ_FUNDO'] == '11.052.478/0001-81']
+        # Determina o diretório da base de dados transformada - fi_df.
+        os.chdir(set_wd[2]+'\\'+year[step_year])
 
-    # Determina o diretório da base de dados transformada - 2018.
-    os.chdir(set_wd[2]+'\\2018')
-
-    fi_geral_2018 = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
-                                                                                                                          'VL_PATRIM_LIQ': 'float32',
-                                                                                                                          'NR_COTST': np.uint16})
-    fi_geral_2018 = fi_geral_2018.loc[fi_geral_2018['CNPJ_FUNDO'] == '11.052.478/0001-81']
-
-    # Determina o diretório da base de dados transformada - 2019.
-    os.chdir(set_wd[2]+'\\2019')
-
-    fi_geral_2019 = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
-                                                                                                                          'VL_PATRIM_LIQ': 'float32',
-                                                                                                                          'NR_COTST': np.uint16})
-    fi_geral_2019 = fi_geral_2019.loc[fi_geral_2019['CNPJ_FUNDO'] == '11.052.478/0001-81']
-
-    # Determina o diretório da base de dados transformada - 2020.
-    os.chdir(set_wd[2]+'\\2020')
-
-    fi_geral_2020 = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
-                                                                                                                          'VL_PATRIM_LIQ': 'float32',
-                                                                                                                          'NR_COTST': np.uint16})
-    fi_geral_2020 = fi_geral_2020.loc[fi_geral_2020['CNPJ_FUNDO'] == '11.052.478/0001-81']
-
-    # Base geral para os cálculos do modelo.
-    fi_geral_modelo = pd.concat([fi_geral_2017, fi_geral_2018, fi_geral_2019, fi_geral_2020])
-
+        fi_geral = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
+                                                                                                                         'VL_PATRIM_LIQ': 'float32',
+                                                                                                                         'NR_COTST': np.uint16})
+        for chunk in fi_geral:
+            chunk = fi_geral.loc[fi_geral['CNPJ_FUNDO'] == '11.052.478/0001-81']
+            fi_geral_modelo = pd.concat([fi_geral_modelo, chunk], ignore_index=True)
+        
     # Salva os a base de dados transformada em seu respectivo diretório.
-    fi_geral_modelo.to_csv('fi_geral_modelo.csv', sep=';', index=False, encoding='utf-8-sig')
+    fi_geral_modelo.to_csv('fi_geral_modelo3.csv', sep=';', index=False, encoding='utf-8-sig')
 
     # Prepara a base para os cálculos do modelo.
     fi_geral_modelo = fi_geral_modelo.drop(columns=['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS',
@@ -209,7 +187,7 @@ def f_regression_model(set_wd):
     x = fi_geral_modelo[['VL_PATRIM_LIQ', 'NR_COTST']]
     y = fi_geral_modelo['VL_QUOTA']
 
-    # Regressão multipla utilizando a biblioteca sklearn
+    # Regressão múltipla utilizando a biblioteca sklearn
     regression = linear_model.LinearRegression().fit(x, y)
     print('Intercept: ', regression.intercept_, '| Coefficients: ', regression.coef_)
 
@@ -222,7 +200,7 @@ def f_regression_model(set_wd):
     cotistas = 13841
     print ('Resultado: ', regression.predict([[patrimonio_liquido, cotistas]]))
 
-    # Regressão multipla utilizando a biblioteca statsmodels
+    # Regressão múltipla utilizando a biblioteca statsmodels.
     x = sm.add_constant(x)
     regression_model = sm.OLS(y, x).fit()
     regression_model.predict(x) 
@@ -250,7 +228,8 @@ def f_main():
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_df']
     len_count = [807, 46]
     file_load = ['fi_cad', 'fi_diario']
-    year = ['2017', '2017', '2018', '2018', '2019', '2019', '2020', '2020']
+    # year = ['2017', '2017', '2018', '2018', '2019', '2019', '2020', '2020']
+    year = ['2017', '2018', '2019', '2020']
 
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
@@ -262,7 +241,7 @@ def f_main():
     if cmd_args.exploratory_data:
         f_exploratory_data(set_wd, file_load)
     if cmd_args.regression_model:
-        f_regression_model(set_wd)
+        f_regression_model(set_wd, year)
 
 if __name__ == '__main__':
     f_main()
