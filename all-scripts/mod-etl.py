@@ -178,7 +178,7 @@ def f_regression_model(set_wd, year):
             fi_geral_modelo = pd.concat([fi_geral_modelo, chunk], ignore_index=True)
         
     # Salva os a base de dados transformada em seu respectivo diretório.
-    fi_geral_modelo.to_csv('fi_geral_modelo3.csv', sep=';', index=False, encoding='utf-8-sig')
+    fi_geral_modelo.to_csv('fi_geral_modelo.csv', sep=';', index=False, encoding='utf-8-sig')
 
     # Prepara a base para os cálculos do modelo.
     fi_geral_modelo = fi_geral_modelo.drop(columns=['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS',
