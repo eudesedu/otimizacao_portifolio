@@ -154,7 +154,7 @@ def f_exploratory_data(set_wd, file_load):
 
     # Relatório das análises exploratórias de dados.
     fi_profile = ProfileReport(fi_profile, minimal=True)
-    fi_profile.to_file(set_wd[2]+'\\fi_geral_profile.html')
+    fi_profile.to_file('fi_geral_profile.html')
 
 def f_regression_model(set_wd, year):
     """
