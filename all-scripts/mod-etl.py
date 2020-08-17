@@ -19,14 +19,17 @@ def f_extract(df_fi, set_wd, len_count):
     for path in range(0, 2):
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
+
         # Registra em memória as informações dos arquivos a partir da página >html< da fonte pública.
         df_fi_csv = []
         df_fi_data = requests.get(df_fi[path]).content
         df_fi_soup = BeautifulSoup(df_fi_data, 'html.parser')
+
         # Encontra e registra em lista o nome dos arquivos.
         for link in df_fi_soup.find_all('a'):
             df_fi_csv.append(link.get('href'))
         inf_cadastral_fi = df_fi_csv[len(df_fi_csv)-(len_count[path]):(len(df_fi_csv)-2)]
+
         # Salva todos os arquivos em seus respectivos diretórios.
         for files in range(0, len(inf_cadastral_fi)):
             df_fi_csv_url = df_fi[path]+inf_cadastral_fi[files]
