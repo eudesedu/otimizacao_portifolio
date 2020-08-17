@@ -12,6 +12,22 @@ from pandas_profiling import ProfileReport
 from sklearn import linear_model
 import statsmodels.api as sm
 
+##############################################################################################################################################################
+################################################################# Portal Dados Abertos - CVM #################################################################
+#################################################################  http://dados.cvm.gov.br/  #################################################################
+## "CKAN é a maior plataforma para portal de dados em software livre do mundo."                                                                             ##
+## "CKAN é uma solução completa e pronta para usar que torna os dados acessíveis e utilizáveis – ao prover ferramentas para simplificar a publicação,       ##
+## o compartilhamento, o encontro e a utilização dos dados (incluindo o armazenamento de dados e o provimento de robustas APIs de dados). CKAN está         ##
+## direcionado a publicadores de dados (governos nacionais e regionais, companhias e organizações) que querem tornar seus dados abertos e disponíveis."     ##
+## "CKAN é usado por governos e grupos de usuários em todo o mundo e impulsiona vários portais oficiais e da comunidade, incluindo portais governamentais   ## 
+## locais, nacionais e internacionais, tais como o data.gov.uk do Reino Unido, o publicdata.eu da União Europeia, o dados.gov.br do Brasil, o portal do     ##
+## governo da Holanda, assim como sítios de cidades e municípios nos EUA, Reino Unido, Argentina, Finlândia e em outros lugares."                           ##
+                                                                                                                                                            ##
+## CKAN: http://ckan.org/                                                                                                                                   ##
+## Tour do CKAN: http://ckan.org/tour/                                                                                                                      ##
+## Visão geral das funcionalidades: http://ckan.org/features/                                                                                               ##                                                 
+##############################################################################################################################################################
+
 def f_extract(df_fi, set_wd, len_count):
     """
     Extrai os dados da fonte pública - Comissão de Valores Mobiliários (CVM).
@@ -45,13 +61,17 @@ def f_transform(set_wd):
     """
     # Define as variáveis do cadastro dos fundos de investimentos.
     var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
+
     for path in range(0, 2):
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
+
         # Cria uma lista com os names dos arquivos com extenção CSV.
         files_list = glob.glob('*.csv')
+
         # Define um limite de 50MB para leitura dos arquivos da fonte pública.
         csv.field_size_limit(500000)
+
         # Lê cada arquivo da lista removendo as variáveis desnecessárias:
         for files in range(0, len(files_list)):
             if set_wd[path] == set_wd[0]:
@@ -66,12 +86,15 @@ def f_transform(set_wd):
                 files_sample['VL_QUOTA'] = files_sample['VL_QUOTA'].astype('float16')
                 files_sample['VL_PATRIM_LIQ'] = files_sample['VL_PATRIM_LIQ'].astype('float32')
                 files_sample['NR_COTST'] = files_sample['NR_COTST'].astype(np.uint16)
+
             # Remove campos vazios de cada variável.
             files_sample = files_sample.dropna(how='any', axis=0)
+
             # Remove os espaços em brancos da base de dados.
             files_sample = files_sample.applymap(lambda x: x.strip() if type(x)==str else x)
+
             # Salva o arquivo da base de dados, transformado e limpo, em seu respectivo diretório.
-            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig') 
+            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')
 
 def f_load(set_wd, file_load, year):
     """
