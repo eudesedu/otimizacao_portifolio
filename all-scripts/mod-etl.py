@@ -17,20 +17,16 @@ def f_extract(df_fi, set_wd, len_count):
     Extrai os dados da fonte pública - Comissão de Valores Mobiliários (CVM).
     """
     for path in range(0, 2):
-
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
-
-        # Registra em memória as informações dos arquivos a partir da página html da fonte pública.
+        # Registra em memória as informações dos arquivos a partir da página >html< da fonte pública.
         df_fi_csv = []
         df_fi_data = requests.get(df_fi[path]).content
         df_fi_soup = BeautifulSoup(df_fi_data, 'html.parser')
-
         # Encontra e registra em lista o nome dos arquivos.
         for link in df_fi_soup.find_all('a'):
             df_fi_csv.append(link.get('href'))
         inf_cadastral_fi = df_fi_csv[len(df_fi_csv)-(len_count[path]):(len(df_fi_csv)-2)]
-
         # Salva todos os arquivos em seus respectivos diretórios.
         for files in range(0, len(inf_cadastral_fi)):
             df_fi_csv_url = df_fi[path]+inf_cadastral_fi[files]
@@ -40,36 +36,26 @@ def f_extract(df_fi, set_wd, len_count):
             df_fi_csv_file.write(url_content)
             df_fi_csv_file.close()
 
-def f_transform(set_wd, year):
+def f_transform(set_wd):
     """
     Aplica uma série de transformações aos dados extraídos para gerar o fluxo que será carregado.
     """
+    # Define as variáveis do cadastro dos fundos de investimentos.
+    var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
     for path in range(0, 2):
-
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
-
         # Cria uma lista com os names dos arquivos com extenção CSV.
-        files_list = glob.glob('*'+year[path]+'*.csv')
-
+        files_list = glob.glob('*.csv')
         # Define um limite de 50MB para leitura dos arquivos da fonte pública.
         csv.field_size_limit(500000)
-
+        # Lê cada arquivo da lista removendo as variáveis desnecessárias:
         for files in range(0, len(files_list)):
-            # Lê cada arquivo da lista removendo as variáveis desnecessárias.
             if set_wd[path] == set_wd[0]:
-                files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
-                files_sample = files_sample.drop(columns=['DT_REG', 'DT_CONST', 'DT_CANCEL', 'DT_INI_SIT', 'DT_INI_ATIV', 'DT_INI_CLASSE', 'RENTAB_FUNDO',
-                                                          'TRIB_LPRAZO', 'TAXA_PERFM', 'VL_PATRIM_LIQ', 'DT_PATRIM_LIQ', 'DIRETOR', 'CNPJ_ADMIN', 'ADMIN',
-                                                          'PF_PJ_GESTOR', 'CPF_CNPJ_GESTOR', 'GESTOR'])
+                files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', usecols=var_list, error_bad_lines=False)
                 files_sample = files_sample.compute()
-
-                # Remove subitens desnecessário considerando particularidades de algumas variável.
                 files_sample.drop(files_sample[files_sample.SIT == 'CANCELADA'].index, inplace=True)
                 files_sample.drop(files_sample[files_sample.SIT == 'FASE PRÉ-OPERACIONAL'].index, inplace=True)
-                files_sample.drop(files_sample[files_sample.CONDOM == 'Fechado'].index, inplace=True)
-                files_sample.drop(files_sample[files_sample.FUNDO_EXCLUSIVO == 'S'].index, inplace=True)
-                files_sample.drop(files_sample[files_sample.INVEST_QUALIF == 'S'].index, inplace=True)
             else:
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
                 files_sample = files_sample.compute()
@@ -77,15 +63,12 @@ def f_transform(set_wd, year):
                 files_sample['VL_QUOTA'] = files_sample['VL_QUOTA'].astype('float16')
                 files_sample['VL_PATRIM_LIQ'] = files_sample['VL_PATRIM_LIQ'].astype('float32')
                 files_sample['NR_COTST'] = files_sample['NR_COTST'].astype(np.uint16)
-
             # Remove campos vazios de cada variável.
             files_sample = files_sample.dropna(how='any', axis=0)
-
             # Remove os espaços em brancos da base de dados.
             files_sample = files_sample.applymap(lambda x: x.strip() if type(x)==str else x)
-
-            # Salva o arquivo transformado e limpo em seu respectivo diretório.
-            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')
+            # Salva o arquivo da base de dados, transformado e limpo, em seu respectivo diretório.
+            files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig') 
 
 def f_load(set_wd, file_load, year):
     """
@@ -226,10 +209,10 @@ def f_main():
     df_fi = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario',
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_df']
-    len_count = [807, 46]
+    len_count = [817, 46]
     file_load = ['fi_cad', 'fi_diario']
-    # year = ['2017', '2017', '2018', '2018', '2019', '2019', '2020', '2020']
-    year = ['2017', '2018', '2019', '2020']
+    #year = ['2017', '2017', '2018', '2018', '2019', '2019', '2020', '2020']
+    #year = ['2017', '2018', '2019', '2020']
 
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
