@@ -18,17 +18,17 @@ import statsmodels.api as sm
 """
 CKAN é a maior plataforma para portal de dados em software livre do mundo.
 
-CKAN é uma solução completa e pronta para usar que torna os dados acessíveis e utilizáveis – ao prover ferramentas para simplificar a publicação,       
-o compartilhamento, o encontro e a utilização dos dados (incluindo o armazenamento de dados e o provimento de robustas APIs de dados). CKAN está         
+CKAN é uma solução completa e pronta para usar que torna os dados acessíveis e utilizáveis – ao prover ferramentas para simplificar a publicação,
+o compartilhamento, o encontro e a utilização dos dados (incluindo o armazenamento de dados e o provimento de robustas APIs de dados). CKAN está
 direcionado a publicadores de dados (governos nacionais e regionais, companhias e organizações) que querem tornar seus dados abertos e disponíveis.
 
-CKAN é usado por governos e grupos de usuários em todo o mundo e impulsiona vários portais oficiais e da comunidade, incluindo portais governamentais    
-locais, nacionais e internacionais, tais como o data.gov.uk do Reino Unido, o publicdata.eu da União Europeia, o dados.gov.br do Brasil, o portal do     
-governo da Holanda, assim como sítios de cidades e municípios nos EUA, Reino Unido, Argentina, Finlândia e em outros lugares.                           
-                                                                                                                                                            
-CKAN: http://ckan.org/ | http://ckan.org/tour/                                                                                                                      
-Visão geral das funcionalidades: http://ckan.org/features/ 
-"""                                                                                                                                            
+CKAN é usado por governos e grupos de usuários em todo o mundo e impulsiona vários portais oficiais e da comunidade, incluindo portais governamentais
+locais, nacionais e internacionais, tais como o data.gov.uk do Reino Unido, o publicdata.eu da União Europeia, o dados.gov.br do Brasil, o portal do
+governo da Holanda, assim como sítios de cidades e municípios nos EUA, Reino Unido, Argentina, Finlândia e em outros lugares.
+
+CKAN: http://ckan.org/ | http://ckan.org/tour/
+Visão geral das funcionalidades: http://ckan.org/features/
+"""
 ##############################################################################################################################################################
 
 def f_extract(df_fi, set_wd, len_count):
@@ -188,7 +188,7 @@ def f_regression_model(set_wd, year):
         for chunk in fi_geral:
             chunk = fi_geral.loc[fi_geral['CNPJ_FUNDO'] == '11.052.478/0001-81']
             fi_geral_modelo = pd.concat([fi_geral_modelo, chunk], ignore_index=True)
-        
+
     # Salva os a base de dados transformada em seu respectivo diretório.
     fi_geral_modelo.to_csv(set_wd[2]+'\\fi_geral_modelo.csv', sep=';', index=False, encoding='utf-8-sig')
 
@@ -247,7 +247,7 @@ def f_main():
     if cmd_args.extract: 
         f_extract(df_fi, set_wd, len_count)
     if cmd_args.transform: 
-        f_transform(set_wd, year)
+        f_transform(set_wd)
     if cmd_args.load:
         f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
