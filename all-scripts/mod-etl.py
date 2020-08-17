@@ -58,7 +58,7 @@ def f_extract(df_fi, set_wd, len_count):
             df_fi_csv_file.write(url_content)
             df_fi_csv_file.close()
             os.system('dir *csv* /b')
-        os.system('dir *csv* /T:W')
+        os.system('dir *csv* /t > filelist.txt')
 
 def f_transform(set_wd):
     """
