@@ -57,6 +57,8 @@ def f_extract(df_fi, set_wd, len_count):
             df_fi_csv_file = open(inf_cadastral_fi[files], 'wb')
             df_fi_csv_file.write(url_content)
             df_fi_csv_file.close()
+            os.system('dir *csv* /b')
+        os.system('dir *csv* /T:W')
 
 def f_transform(set_wd):
     """
