@@ -109,6 +109,8 @@ def f_load(set_wd, file_load):
             fi_cad = fi_cad.drop_duplicates('CNPJ_FUNDO')
             # Validação dos dados.
             print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.shape)
+            # Salva os arquivos concatenados em seu respectivo diretório.
+            fi_cad.to_hdf(file_load[path]+'.h5', set_wd[0])
         # Lê e concatena todos os arquivos CSV do diretório - fi_diario.
         if set_wd[path] == set_wd[1]:
             files_list = glob.glob('*.csv')
@@ -118,12 +120,8 @@ def f_load(set_wd, file_load):
                                   for files in files_list])
             # Validação dos dados.
             print(fi_diario, fi_diario.dtypes, fi_diario.columns, fi_diario.shape)
-    # Combina as bases fi_diario | fi_cad e salva o resultado no diretório - fi_df.
-    fi_df = fi_diario.merge(fi_cad, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO')
-    # Validação dos dados.
-    print(fi_df, fi_df.dtypes, fi_df.columns, fi_df.shape)
-    # Salva os a base de dados transformada em seu respectivo diretório.
-    fi_df.to_hdf('fi_geral.h5', set_wd[2])
+            # Salva os arquivos concatenados em seu respectivo diretório.
+            fi_diario.to_hdf(file_load[path]+'.h5', set_wd[1])
 
 def f_exploratory_data(set_wd, file_load):
     """
