@@ -127,17 +127,20 @@ def f_exploratory_data(set_wd, file_load):
     """
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
-    # Determina o diretório da base de dados transformada.
-    os.chdir(set_wd[2])
-    # Lê a base de dados geral no diretório - fi_df.
-    var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST', 'DENOM_SOCIAL', 'SIT', 'CLASSE',
-                'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
-    fi_profile = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
-                                                                                                                       'VL_PATRIM_LIQ': 'float32',
-                                                                                                                       'NR_COTST': np.uint16})
+    for path in range(0, 2):
+        # Determina o diretório da base de dados transformada.
+        os.chdir(set_wd[path])
+        # Lê as base de dados.
+        if set_wd[path] == set_wd[0]:
+            fi_cad = dd.read_hdf(file_load[path]+'.h5', set_wd[path])
+        else:
+            fi_diario = dd.read_hdf(file_load[path]+'.h5', set_wd[path])
+    fi_df = fi_diario.merge(fi_cad, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO')
+    print(fi_df, fi_df.dtypes, fi_df.columns, fi_df.shape)
+
     # Relatório das análises exploratórias de dados.
-    fi_profile = ProfileReport(fi_profile, minimal=True)
-    fi_profile.to_file('fi_geral_profile.html')
+    # fi_profile = ProfileReport(fi_profile, minimal=True)
+    # fi_profile.to_file('fi_geral_profile.html')
 def f_regression_model(set_wd, year):
     """
     Modelo baseado em regressão linear múltipla para variável resposta: Valor da Cota (VL_QUOTA).
