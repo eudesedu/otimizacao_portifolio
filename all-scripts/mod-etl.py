@@ -131,11 +131,8 @@ def f_exploratory_data(set_wd, file_load):
         # Determina o diretório da base de dados transformada.
         os.chdir(set_wd[path])
         # Lê as base de dados.
-        if set_wd[path] == set_wd[0]:
-            fi_cad = dd.read_hdf(file_load[path]+'.h5', set_wd[path])
-        else:
-            fi_diario = dd.read_hdf(file_load[path]+'.h5', set_wd[path])
-    fi_df = fi_diario.merge(fi_cad, left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO')
+        file_load[path] = dd.read_hdf(file_load[path]+'.h5', set_wd[path])
+    fi_df = file_load[1].merge(file_load[0], left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO')
     print(fi_df, fi_df.dtypes, fi_df.columns, fi_df.shape)
 
     # Relatório das análises exploratórias de dados.
