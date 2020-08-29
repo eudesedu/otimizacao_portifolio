@@ -93,35 +93,37 @@ def f_transform(set_wd):
             # Salva o arquivo da base de dados, transformado e limpo, em seu respectivo diretório.
             files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')
 
-def f_load(set_wd, file_load):
+def f_load(set_wd, file_load, year):
     """
     Carrega a base de dados transformada.
     """
     for path in range(0, 2):
-        # Determina o diretório dos arquivos em cada enlace.
+        # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
-        # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
-        if set_wd[path] == set_wd[0]:
-            files_list = glob.glob('*.csv')
-            fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
-                               for files in files_list])
-            # Remove linhas repetidas.
-            fi_cad = fi_cad.drop_duplicates('CNPJ_FUNDO')
-            # Validação dos dados.
-            print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.shape)
-            # Salva os arquivos concatenados em seu respectivo diretório.
-            fi_cad.to_hdf(file_load[path]+'.h5', set_wd[0])
-        # Lê e concatena todos os arquivos CSV do diretório - fi_diario.
-        if set_wd[path] == set_wd[1]:
-            files_list = glob.glob('*.csv')
-            var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST']
-            fi_diario = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', 
-                                  usecols=var_list).astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
-                                  for files in files_list])
-            # Validação dos dados.
-            print(fi_diario, fi_diario.dtypes, fi_diario.columns, fi_diario.shape)
-            # Salva os arquivos concatenados em seu respectivo diretório.
-            fi_diario.to_hdf(file_load[path]+'.h5', set_wd[1])
+        for next_year in range(0, 4):
+            if set_wd[path] == set_wd[0]:
+                # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
+                files_list = glob.glob('*'+year[next_year]+'*.csv')
+                fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
+                                    for files in files_list])
+                # Remove linhas repetidas.
+                fi_cad = fi_cad.drop_duplicates('CNPJ_FUNDO')
+                fi_cad = fi_cad.compute()
+                # Validação dos dados.
+                print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
+                # Salva os arquivos concatenados em seu respectivo diretório.
+                fi_cad.to_csv(file_load[0]+'_'+year[next_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+            else:
+                # Lê e concatena todos os arquivos CSV do diretório - fi_diario.
+                files_list = glob.glob('*'+year[next_year]+'*.csv')
+                var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST']
+                fi_diario = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', 
+                                       usecols=var_list).astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
+                                       for files in files_list])
+                # Validação dos dados.
+                print(fi_diario, fi_diario.dtypes, fi_diario.columns, fi_diario.count(), fi_diario.isnull().sum(), fi_diario.nunique(), fi_diario.shape)
+                # Salva os arquivos concatenados em seu respectivo diretório.
+                fi_diario.to_csv(file_load[1]+'_'+year[next_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
 def f_exploratory_data(set_wd, file_load):
     """
@@ -199,14 +201,14 @@ def f_main():
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_df']
     len_count = [817, 46]
     file_load = ['fi_cad', 'fi_diario']
-    year = ['2017', '2017', '2018', '2018', '2019', '2019', '2020', '2020']
+    year = ['2017', '2018', '2019', '2020']
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
         f_extract(df_fi, set_wd, len_count)
     if cmd_args.transform: 
         f_transform(set_wd)
     if cmd_args.load:
-        f_load(set_wd, file_load)
+        f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
         f_exploratory_data(set_wd, file_load)
     if cmd_args.regression_model:
