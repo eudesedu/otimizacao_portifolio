@@ -100,10 +100,10 @@ def f_load(set_wd, file_load, year):
     for path in range(0, 2):
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
-        for next_year in range(0, 4):
+        for step_year in range(0, 4):
             if set_wd[path] == set_wd[0]:
                 # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
-                files_list = glob.glob('*'+year[next_year]+'*.csv')
+                files_list = glob.glob('*'+year[step_year]+'*.csv')
                 fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
                                     for files in files_list])
                 # Remove linhas repetidas.
@@ -112,10 +112,10 @@ def f_load(set_wd, file_load, year):
                 # Validação dos dados.
                 print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
                 # Salva os arquivos concatenados em seu respectivo diretório.
-                fi_cad.to_csv(file_load[0]+'_'+year[next_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                fi_cad.to_csv(file_load[0]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
             else:
                 # Lê e concatena todos os arquivos CSV do diretório - fi_diario.
-                files_list = glob.glob('*'+year[next_year]+'*.csv')
+                files_list = glob.glob('*'+year[step_year]+'*.csv')
                 var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST']
                 fi_diario = pd.concat([pd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', 
                                        usecols=var_list).astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
@@ -123,7 +123,7 @@ def f_load(set_wd, file_load, year):
                 # Validação dos dados.
                 print(fi_diario, fi_diario.dtypes, fi_diario.columns, fi_diario.count(), fi_diario.isnull().sum(), fi_diario.nunique(), fi_diario.shape)
                 # Salva os arquivos concatenados em seu respectivo diretório.
-                fi_diario.to_csv(file_load[1]+'_'+year[next_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                fi_diario.to_csv(file_load[1]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
 def f_exploratory_data(set_wd, file_load):
     """
