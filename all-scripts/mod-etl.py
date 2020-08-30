@@ -154,7 +154,7 @@ def f_exploratory_data(set_wd, file_load):
         print(file_load[path].tail(10))
         # Tipo das variáveis.
         print(file_load[path].dtypes)
-        # Número de variáveis de observações.
+        # Número de variáveis e observações.
         print(file_load[path].shape)
         # Número de observações para cada variável.
         print(file_load[path].count())
