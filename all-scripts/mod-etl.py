@@ -104,7 +104,8 @@ def f_load(set_wd, file_load, year):
             if set_wd[path] == set_wd[0]:
                 # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
                 files_list = glob.glob('*'+year[step_year]+'*.csv')
-                fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') 
+                var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
+                fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list) 
                                     for files in files_list])
                 # Remove linhas repetidas.
                 fi_cad = fi_cad.drop_duplicates('CNPJ_FUNDO')
@@ -112,7 +113,7 @@ def f_load(set_wd, file_load, year):
                 # Validação dos dados.
                 print(fi_cad, fi_cad.dtypes, fi_cad.columns, fi_cad.count(), fi_cad.isnull().sum(), fi_cad.nunique(), fi_cad.shape)
                 # Salva os arquivos concatenados em seu respectivo diretório.
-                fi_cad.to_csv(file_load[0]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                fi_cad.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
             else:
                 # Lê e concatena todos os arquivos CSV do diretório - fi_diario.
                 files_list = glob.glob('*'+year[step_year]+'*.csv')
@@ -123,7 +124,7 @@ def f_load(set_wd, file_load, year):
                 # Validação dos dados.
                 print(fi_diario, fi_diario.dtypes, fi_diario.columns, fi_diario.count(), fi_diario.isnull().sum(), fi_diario.nunique(), fi_diario.shape)
                 # Salva os arquivos concatenados em seu respectivo diretório.
-                fi_diario.to_csv(file_load[1]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                fi_diario.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
 def f_exploratory_data(set_wd, file_load):
     """
