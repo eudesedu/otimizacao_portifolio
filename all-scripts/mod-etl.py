@@ -134,14 +134,14 @@ def f_exploratory_data(set_wd, file_load):
         # Determina o diretório da base de dados transformada.
         os.chdir(set_wd[path])
         if set_wd[path] == set_wd[0]:
-            # Lê as base de dados.
+            # Lê a base de dado.
             file_load[path] = dd.read_csv(file_load[path]+'.csv', sep=';', engine='python', encoding='utf-8-sig')
             file_load[path] = file_load[path].compute()
             # Troca o nome das variáveis.
             file_load[path] = file_load[path].rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
                                                               'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
         else:
-            # Lê as base de dados.
+            # Lê a base de dado.
             file_load[path] = dd.read_csv(file_load[path]+'.csv', sep=';', engine='python', 
                                           encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
             file_load[path] = file_load[path].compute()
