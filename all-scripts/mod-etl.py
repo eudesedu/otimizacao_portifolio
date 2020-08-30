@@ -129,17 +129,39 @@ def f_exploratory_data(set_wd, file_load):
     """
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
+    Client()
     for path in range(0, 2):
         # Determina o diretório da base de dados transformada.
         os.chdir(set_wd[path])
-        # Lê as base de dados.
-        file_load[path] = dd.read_hdf(file_load[path]+'.h5', set_wd[path])
-    fi_df = file_load[1].merge(file_load[0], left_on='CNPJ_FUNDO', right_on='CNPJ_FUNDO')
-    print(fi_df, fi_df.dtypes, fi_df.columns, fi_df.shape)
+        if set_wd[path] == set_wd[0]:
+            # Lê as base de dados.
+            file_load[path] = dd.read_csv(file_load[path]+'.csv', sep=';', engine='python', encoding='utf-8-sig')
+            file_load[path] = file_load[path].compute()
+            # Troca o nome das variáveis.
+            file_load[path] = file_load[path].rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
+                                                              'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
+        else:
+            # Lê as base de dados.
+            file_load[path] = dd.read_csv(file_load[path]+'.csv', sep=';', engine='python', 
+                                          encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
+            file_load[path] = file_load[path].compute()
+            # Troca o nome das variáveis.
+            file_load[path] = file_load[path].rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA', 'VL_PATRIM_LIQ': 'PATRIMONIO',
+                                                              'NR_COTST': 'COTISTAS'})
+        # Primeiros 10 registros da base de dados.
+        print(file_load[path].head(10))
+        # Últimos 10 registros da base de dados.
+        print(file_load[path].tail(10))
+        # Tipo das variáveis.
+        print(file_load[path].dtypes)
+        # Número de variáveis de observações.
+        print(file_load[path].shape)
+        # Número de observações para cada variável.
+        print(file_load[path].count())
+        # Verifica se há dados faltantes.
+        print(file_load[path].isnull().sum())
 
-    # Relatório das análises exploratórias de dados.
-    # fi_profile = ProfileReport(fi_profile, minimal=True)
-    # fi_profile.to_file('fi_geral_profile.html')
+        
 def f_regression_model(set_wd, year):
     """
     Modelo baseado em regressão linear múltipla para variável resposta: Valor da Cota (VL_QUOTA).
