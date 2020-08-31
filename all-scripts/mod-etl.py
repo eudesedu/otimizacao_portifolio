@@ -125,7 +125,7 @@ def f_load(set_wd, file_load, year):
                 # Salva os arquivos concatenados em seu respectivo diretório.
                 fi_diario.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
-def f_exploratory_data(set_wd, file_load):
+def f_exploratory_data(set_wd, file_load, year):
     """
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
@@ -133,35 +133,53 @@ def f_exploratory_data(set_wd, file_load):
     for path in range(0, 2):
         # Determina o diretório da base de dados transformada.
         os.chdir(set_wd[path])
-        if set_wd[path] == set_wd[0]:
-            # Lê a base de dado.
-            file_load[path] = dd.read_csv(file_load[path]+'.csv', sep=';', engine='python', encoding='utf-8-sig')
-            file_load[path] = file_load[path].compute()
-            # Troca o nome das variáveis.
-            file_load[path] = file_load[path].rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
-                                                              'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
-        else:
-            # Lê a base de dado.
-            file_load[path] = dd.read_csv(file_load[path]+'.csv', sep=';', engine='python', 
-                                          encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
-            file_load[path] = file_load[path].compute()
-            # Troca o nome das variáveis.
-            file_load[path] = file_load[path].rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA', 'VL_PATRIM_LIQ': 'PATRIMONIO',
-                                                              'NR_COTST': 'COTISTAS'})
-        # Primeiros 10 registros da base de dados.
-        print(file_load[path].head(10))
-        # Últimos 10 registros da base de dados.
-        print(file_load[path].tail(10))
-        # Tipo das variáveis.
-        print(file_load[path].dtypes)
-        # Número de variáveis e observações.
-        print(file_load[path].shape)
-        # Número de observações para cada variável.
-        print(file_load[path].count())
-        # Verifica se há dados faltantes.
-        print(file_load[path].isnull().sum())
+        for step_year in range(0, 4):
+            if set_wd[path] == set_wd[0]:
+                # Lê a base de dado.
+                fi_cad = dd.read_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', engine='python', encoding='utf-8-sig')
+                fi_cad = fi_cad.compute()
+                # Troca o nome das variáveis.
+                fi_cad = fi_cad.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
+                                                'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
+                fi_profile = ProfileReport(fi_cad)
+                fi_profile.to_file('fi_profile_'+year[step_year]+'.html')
+                # Primeiros 10 registros da base de dados.
+                print(fi_cad.head(10))
+                # Últimos 10 registros da base de dados.
+                print(fi_cad.tail(10))
+                # Tipo das variáveis.
+                print(fi_cad.dtypes)
+                # Número de variáveis e observações.
+                print(fi_cad.shape)
+                # Número de observações para cada variável.
+                print(fi_cad.count())
+                # Verifica se há dados faltantes.
+                print(fi_cad.isnull().sum())
+                # Relatório das análises exploratórias de dados.
+            else:
+                # Lê a base de dado.
+                fi_diario = dd.read_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', engine='python',
+                                              encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
+                fi_diario = fi_diario.compute()
+                # Troca o nome das variáveis.
+                fi_diario = fi_diario.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA',
+                                                                  'VL_PATRIM_LIQ': 'PATRIMONIO', 'NR_COTST': 'COTISTAS'})
+                fi_profile = ProfileReport(fi_diario, minimal=True)
+                fi_profile.to_file('fi_profile_'+year[step_year]+'.html')
+                # Primeiros 10 registros da base de dados.
+                print(fi_diario.head(10))
+                # Últimos 10 registros da base de dados.
+                print(fi_diario.tail(10))
+                # Tipo das variáveis.
+                print(fi_diario.dtypes)
+                # Número de variáveis e observações.
+                print(fi_diario.shape)
+                # Número de observações para cada variável.
+                print(fi_diario.count())
+                # Verifica se há dados faltantes.
+                print(fi_diario.isnull().sum())
+                # Relatório das análises exploratórias de dados.
 
-        
 def f_regression_model(set_wd, year):
     """
     Modelo baseado em regressão linear múltipla para variável resposta: Valor da Cota (VL_QUOTA).
@@ -219,8 +237,7 @@ def f_main():
     cmd_args = parser.parse_args()
     # Lista de constantes como parâmetros de entrada.
     df_fi = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
-    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario',
-              'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_df']
+    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [817, 46]
     file_load = ['fi_cad', 'fi_diario']
     year = ['2017', '2018', '2019', '2020']
@@ -232,7 +249,7 @@ def f_main():
     if cmd_args.load:
         f_load(set_wd, file_load, year)
     if cmd_args.exploratory_data:
-        f_exploratory_data(set_wd, file_load)
+        f_exploratory_data(set_wd, file_load, year)
     if cmd_args.regression_model:
         f_regression_model(set_wd, year)
 
