@@ -94,7 +94,7 @@ def f_transform(set_wd):
             # Salva o arquivo da base de dados, transformado e limpo, em seu respectivo diretório.
             files_sample.to_csv(files_list[files], sep=';', index=False, encoding='utf-8-sig')
 
-def f_load(set_wd, file_load, year):
+def f_load(set_wd, file_load, file_pattern):
     """
     Carrega a base de dados transformada.
     """
@@ -102,10 +102,10 @@ def f_load(set_wd, file_load, year):
     for path in range(0, 2):
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
-        for step_year in range(0, 4):
+        for step in range(0, 5):
             if set_wd[path] == set_wd[0]:
                 # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
-                files_list = glob.glob('*'+year[step_year]+'*.csv')
+                files_list = glob.glob('*'+file_pattern[step]+'*.csv')
                 var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
                 fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list) 
                                     for files in files_list])
@@ -113,19 +113,19 @@ def f_load(set_wd, file_load, year):
                 fi_cad = fi_cad.drop_duplicates('CNPJ_FUNDO')
                 fi_cad = fi_cad.compute()
                 # Salva os arquivos concatenados em seu respectivo diretório.
-                fi_cad.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                fi_cad.to_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', index=False, encoding='utf-8-sig')
             else:
                 # Lê e concatena todos os arquivos CSV do diretório - fi_diario.
-                files_list = glob.glob('*'+year[step_year]+'*.csv')
+                files_list = glob.glob('*'+file_pattern[step]+'*.csv')
                 var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST']
                 fi_diario = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', 
                                        usecols=var_list).astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
                                        for files in files_list])
                 fi_diario = fi_diario.compute()
                 # Salva os arquivos concatenados em seu respectivo diretório.
-                fi_diario.to_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                fi_diario.to_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
-def f_exploratory_data(set_wd, file_load, year):
+def f_exploratory_data(set_wd, file_load, file_pattern):
     """
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
@@ -133,16 +133,16 @@ def f_exploratory_data(set_wd, file_load, year):
     for path in range(0, 2):
         # Determina o diretório da base de dados transformada.
         os.chdir(set_wd[path])
-        for step_year in range(0, 4):
+        for step in range(0, 5):
             if set_wd[path] == set_wd[0]:
                 # Lê a base de dado.
-                fi_cad = dd.read_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', engine='python', encoding='utf-8-sig')
+                fi_cad = dd.read_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', engine='python', encoding='utf-8-sig')
                 fi_cad = fi_cad.compute()
                 # Troca o nome das variáveis.
                 fi_cad = fi_cad.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
                                                 'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
                 fi_profile = ProfileReport(fi_cad)
-                fi_profile.to_file('fi_profile_'+year[step_year]+'.html')
+                fi_profile.to_file('fi_profile_'+file_pattern[step]+'.html')
                 # Primeiros 10 registros da base de dados.
                 print(fi_cad.head(10))
                 # Últimos 10 registros da base de dados.
@@ -158,14 +158,14 @@ def f_exploratory_data(set_wd, file_load, year):
                 # Relatório das análises exploratórias de dados.
             else:
                 # Lê a base de dado.
-                fi_diario = dd.read_csv(file_load[path]+'_'+year[step_year]+'.csv', sep=';', engine='python',
+                fi_diario = dd.read_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', engine='python',
                                               encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
                 fi_diario = fi_diario.compute()
                 # Troca o nome das variáveis.
                 fi_diario = fi_diario.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA',
                                                                   'VL_PATRIM_LIQ': 'PATRIMONIO', 'NR_COTST': 'COTISTAS'})
                 fi_profile = ProfileReport(fi_diario, minimal=True)
-                fi_profile.to_file('fi_profile_'+year[step_year]+'.html')
+                fi_profile.to_file('fi_profile_'+file_pattern[step]+'.html')
                 # Primeiros 10 registros da base de dados.
                 print(fi_diario.head(10))
                 # Últimos 10 registros da base de dados.
@@ -180,7 +180,7 @@ def f_exploratory_data(set_wd, file_load, year):
                 print(fi_diario.isnull().sum())
                 # Relatório das análises exploratórias de dados.
 
-def f_regression_model(set_wd, year):
+def f_regression_model(set_wd, file_pattern):
     """
     Modelo baseado em regressão linear múltipla para variável resposta: Valor da Cota (VL_QUOTA).
     """
@@ -188,9 +188,9 @@ def f_regression_model(set_wd, year):
     var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST', 'DENOM_SOCIAL', 'SIT', 'CLASSE',
                 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
     fi_geral_modelo = pd.DataFrame()
-    for step_year in range(0, 4):
+    for step in range(0, 4):
         # Determina o diretório da base de dados transformada - fi_df.
-        os.chdir(set_wd[2]+'\\'+year[step_year])
+        os.chdir(set_wd[2]+'\\'+file_pattern[step])
         fi_geral = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
                                                                                                                          'VL_PATRIM_LIQ': 'float32',
                                                                                                                          'NR_COTST': np.uint16})
@@ -240,18 +240,18 @@ def f_main():
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     len_count = [817, 46]
     file_load = ['fi_cad', 'fi_diario']
-    year = ['2017', '2018', '2019', '2020']
+    file_pattern = ['inf', '2017', '2018', '2019', '2020']
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
         f_extract(df_fi, set_wd, len_count)
     if cmd_args.transform: 
         f_transform(set_wd)
     if cmd_args.load:
-        f_load(set_wd, file_load, year)
+        f_load(set_wd, file_load, file_pattern)
     if cmd_args.exploratory_data:
-        f_exploratory_data(set_wd, file_load, year)
+        f_exploratory_data(set_wd, file_load, file_pattern)
     if cmd_args.regression_model:
-        f_regression_model(set_wd, year)
+        f_regression_model(set_wd, file_pattern)
 
 if __name__ == '__main__':
     f_main()
