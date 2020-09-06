@@ -12,6 +12,8 @@ import glob
 import csv
 import numpy as np
 from pandas_profiling import ProfileReport
+import re
+import string
 from sklearn import linear_model
 import statsmodels.api as sm
 
@@ -33,6 +35,7 @@ CKAN: http://ckan.org/ | http://ckan.org/tour/
 Visão geral das funcionalidades: http://ckan.org/features/
 """
 ##############################################################################################################################################################
+# use este comando para limpar o ambiente: os.system('cls' if os.name == 'nt' else 'clear')
 
 def f_extract(df_fi, set_wd, len_count):
     """
@@ -141,6 +144,7 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 # Troca o nome das variáveis.
                 fi_cad = fi_cad.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
                                                 'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
+                # Relatório das análises exploratórias de dados.
                 fi_profile = ProfileReport(fi_cad)
                 fi_profile.to_file('fi_profile_'+file_pattern[step]+'.html')
                 # Primeiros 10 registros da base de dados.
@@ -155,15 +159,15 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 print(fi_cad.count())
                 # Verifica se há dados faltantes.
                 print(fi_cad.isnull().sum())
-                # Relatório das análises exploratórias de dados.
             else:
                 # Lê a base de dado.
                 fi_diario = dd.read_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', engine='python',
-                                              encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
+                                        encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
                 fi_diario = fi_diario.compute()
                 # Troca o nome das variáveis.
-                fi_diario = fi_diario.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA',
-                                                                  'VL_PATRIM_LIQ': 'PATRIMONIO', 'NR_COTST': 'COTISTAS'})
+                fi_diario = fi_diario.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA', 'VL_PATRIM_LIQ': 'PATRIMONIO',
+                                                      'NR_COTST': 'COTISTAS'})
+                # Relatório das análises exploratórias de dados.
                 fi_profile = ProfileReport(fi_diario, minimal=True)
                 fi_profile.to_file('fi_profile_'+file_pattern[step]+'.html')
                 # Primeiros 10 registros da base de dados.
@@ -178,7 +182,12 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 print(fi_diario.count())
                 # Verifica se há dados faltantes.
                 print(fi_diario.isnull().sum())
-                # Relatório das análises exploratórias de dados.
+                cnpj_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
+                cnpj_list = cnpj_unique['CNPJ'].tolist()
+                regex = r"[{}]".format(string.punctuation)
+                for cnpj in range(0, len(cnpj_list)):
+                    fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0)
+                    fi_cnpj.to_csv('cnpj_'+re.sub(regex, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
 
 def f_regression_model(set_wd, file_pattern):
     """
