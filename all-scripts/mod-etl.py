@@ -37,7 +37,7 @@ Visão geral das funcionalidades: http://ckan.org/features/
 ##############################################################################################################################################################
 # use este comando para limpar o ambiente: os.system('cls' if os.name == 'nt' else 'clear')
 
-def f_extract(df_fi, set_wd, len_count):
+def f_extract(df_fi, set_wd, file_load):
     """
     Extrai os dados da fonte pública - Comissão de Valores Mobiliários (CVM).
     """
@@ -48,10 +48,12 @@ def f_extract(df_fi, set_wd, len_count):
         df_fi_csv = []
         df_fi_data = requests.get(df_fi[path]).content
         df_fi_soup = BeautifulSoup(df_fi_data, 'html.parser')
+        with open(file_load[path]+'.html', 'w', encoding='utf-8') as file:
+            file.write(str(df_fi_soup))
         # Encontra e registra em lista o nome dos arquivos.
         for link in df_fi_soup.find_all('a'):
             df_fi_csv.append(link.get('href'))
-        inf_cadastral_fi = df_fi_csv[len(df_fi_csv)-(len_count[path]):(len(df_fi_csv)-2)]
+        inf_cadastral_fi = [fi_file for fi_file in df_fi_csv if 'csv' in fi_file]
         # Salva todos os arquivos em seus respectivos diretórios.
         for files in range(0, len(inf_cadastral_fi)):
             df_fi_csv_url = df_fi[path]+inf_cadastral_fi[files]
@@ -133,6 +135,7 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
     Client()
+    regex = r"[{}]".format(string.punctuation)
     for path in range(0, 2):
         # Determina o diretório da base de dados transformada.
         os.chdir(set_wd[path])
@@ -159,6 +162,7 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 print(fi_cad.count())
                 # Verifica se há dados faltantes.
                 print(fi_cad.isnull().sum())
+                cnpj_fi_cad_list = fi_cad['CNPJ'].tolist()
             else:
                 # Lê a base de dado.
                 fi_diario = dd.read_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', engine='python',
@@ -182,9 +186,9 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 print(fi_diario.count())
                 # Verifica se há dados faltantes.
                 print(fi_diario.isnull().sum())
-                cnpj_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
-                cnpj_list = cnpj_unique['CNPJ'].tolist()
-                regex = r"[{}]".format(string.punctuation)
+                cnpj_fi_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
+                cnpj_fi_list = cnpj_fi_unique['CNPJ'].tolist()
+                cnpj_list = list(set(cnpj_fi_list) & set(cnpj_fi_cad_list))
                 for cnpj in range(0, len(cnpj_list)):
                     fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0)
                     fi_cnpj.to_csv('cnpj_'+re.sub(regex, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
@@ -247,12 +251,11 @@ def f_main():
     # Lista de constantes como parâmetros de entrada.
     df_fi = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
-    len_count = [817, 46]
     file_load = ['fi_cad', 'fi_diario']
     file_pattern = ['inf', '2017', '2018', '2019', '2020']
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
-        f_extract(df_fi, set_wd, len_count)
+        f_extract(df_fi, set_wd, file_load)
     if cmd_args.transform: 
         f_transform(set_wd)
     if cmd_args.load:
