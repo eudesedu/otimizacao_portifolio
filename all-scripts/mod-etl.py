@@ -70,7 +70,7 @@ def f_transform(set_wd):
     Aplica uma série de transformações aos dados extraídos para gerar o fluxo que será carregado.
     """
     # Define as variáveis do cadastro dos fundos de investimentos.
-    var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
+    var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'INVEST_QUALIF']
     for path in range(0, 2):
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
@@ -85,6 +85,7 @@ def f_transform(set_wd):
                 files_sample = files_sample.compute()
                 files_sample.drop(files_sample[files_sample.SIT == 'CANCELADA'].index, inplace=True)
                 files_sample.drop(files_sample[files_sample.SIT == 'FASE PRÉ-OPERACIONAL'].index, inplace=True)
+                files_sample = files_sample.drop(columns=['SIT'])
             else:
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
                 files_sample = files_sample.compute()
