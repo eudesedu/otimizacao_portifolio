@@ -70,7 +70,7 @@ def f_transform(set_wd):
     Aplica uma série de transformações aos dados extraídos para gerar o fluxo que será carregado.
     """
     # Define as variáveis do cadastro dos fundos de investimentos.
-    var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'INVEST_QUALIF']
+    var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
     for path in range(0, 2):
         # Determina o diretorio dos arquivos em cada enlace.
         os.chdir(set_wd[path])
@@ -86,6 +86,10 @@ def f_transform(set_wd):
                 files_sample.drop(files_sample[files_sample.SIT == 'CANCELADA'].index, inplace=True)
                 files_sample.drop(files_sample[files_sample.SIT == 'FASE PRÉ-OPERACIONAL'].index, inplace=True)
                 files_sample = files_sample.drop(columns=['SIT'])
+                files_sample.drop(files_sample[files_sample.FUNDO_EXCLUSIVO == 'N'].index, inplace=True)
+                files_sample = files_sample.drop(columns=['FUNDO_EXCLUSIVO'])
+                files_sample.drop(files_sample[files_sample.INVEST_QUALIF == 'N'].index, inplace=True)
+                files_sample = files_sample.drop(columns=['INVEST_QUALIF'])
             else:
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
                 files_sample = files_sample.compute()
@@ -112,7 +116,7 @@ def f_load(set_wd, file_load, file_pattern):
             if set_wd[path] == set_wd[0]:
                 # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
                 files_list = glob.glob('*'+file_pattern[step]+'*.csv')
-                var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
+                var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'CLASSE', 'CONDOM', 'FUNDO_COTAS']
                 fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list) 
                                     for files in files_list])
                 # Remove linhas repetidas.
