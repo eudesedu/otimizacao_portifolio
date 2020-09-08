@@ -140,7 +140,7 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
     Client()
-    regex = r"[{}]".format(string.punctuation)
+    regex_punctuation = r"[{}]".format(string.punctuation)
     for path in range(0, 2):
         # Determina o diretório da base de dados transformada.
         os.chdir(set_wd[path])
@@ -152,9 +152,6 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 # Troca o nome das variáveis.
                 fi_cad = fi_cad.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
                                                 'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
-                # Relatório das análises exploratórias de dados.
-                fi_profile = ProfileReport(fi_cad)
-                fi_profile.to_file('fi_profile_'+file_pattern[step]+'.html')
                 # Primeiros 10 registros da base de dados.
                 print(fi_cad.head(10))
                 # Últimos 10 registros da base de dados.
@@ -167,7 +164,6 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 print(fi_cad.count())
                 # Verifica se há dados faltantes.
                 print(fi_cad.isnull().sum())
-                cnpj_fi_cad_list = fi_cad['CNPJ'].tolist()
             else:
                 # Lê a base de dado.
                 fi_diario = dd.read_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', engine='python',
@@ -176,9 +172,9 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 # Troca o nome das variáveis.
                 fi_diario = fi_diario.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA', 'VL_PATRIM_LIQ': 'PATRIMONIO',
                                                       'NR_COTST': 'COTISTAS'})
-                # Relatório das análises exploratórias de dados.
-                fi_profile = ProfileReport(fi_diario, minimal=True)
-                fi_profile.to_file('fi_profile_'+file_pattern[step]+'.html')
+                # Salva os arquivos concatenados em seu respectivo diretório.
+                fi_diario = fi_diario.merge(fi_cad, left_on='CNPJ', right_on='CNPJ')
+                fi_diario.to_csv('merged_file_'+file_pattern[step]+'.csv', sep=';', index=False, encoding='utf-8-sig')
                 # Primeiros 10 registros da base de dados.
                 print(fi_diario.head(10))
                 # Últimos 10 registros da base de dados.
@@ -192,11 +188,13 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 # Verifica se há dados faltantes.
                 print(fi_diario.isnull().sum())
                 cnpj_fi_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
-                cnpj_fi_list = cnpj_fi_unique['CNPJ'].tolist()
-                cnpj_list = list(set(cnpj_fi_list) & set(cnpj_fi_cad_list))
+                cnpj_list = cnpj_fi_unique['CNPJ'].tolist()
                 for cnpj in range(0, len(cnpj_list)):
                     fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0)
-                    fi_cnpj.to_csv('cnpj_'+re.sub(regex, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                    fi_cnpj.to_csv('cnpj_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                    # Relatório das análises exploratórias de dados.
+                    # fi_profile = ProfileReport(fi_diario, title='Profiling Report')
+                    # fi_profile.to_file('cnpj_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.html')
 
 def f_regression_model(set_wd, file_pattern):
     """
@@ -257,7 +255,7 @@ def f_main():
     df_fi = ['http://dados.cvm.gov.br/dados/FI/CAD/DADOS/', 'http://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/']
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario']
     file_load = ['fi_cad', 'fi_diario']
-    file_pattern = ['inf', '2017', '2018', '2019', '2020']
+    file_pattern = ['2017', '2018', '2019', '2020', 'inf']
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.extract: 
         f_extract(df_fi, set_wd, file_load)
