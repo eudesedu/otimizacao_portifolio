@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import dask.dataframe as dd
 from dask.distributed import Client
+import csv
 import glob
 from pandas_profiling import ProfileReport
 import re
@@ -160,6 +161,9 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
             print(fi_cad.count())
             # Verifica se há dados faltantes.
             print(fi_cad.isnull().sum())
+            # Relatório das análises exploratórias de dados.
+            fi_profile = ProfileReport(fi_cad, title='Profiling Report')
+            fi_profile.to_file(set_wd[2]+'\\'+file_load[path]+'_'+file_pattern[4]+'.html')
         else:
             # Lê a base de dado.
             fi_diario = dd.read_csv(file_load[path]+'_'+file_pattern[4]+'.csv', sep=';', engine='python',
