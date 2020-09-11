@@ -188,14 +188,6 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 print(fi_diario.count())
                 # Verifica se há dados faltantes.
                 print(fi_diario.isnull().sum())
-                # cnpj_fi_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
-                # cnpj_list = cnpj_fi_unique['CNPJ'].tolist()
-                # for cnpj in range(0, len(cnpj_list)):
-                #     fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0)
-                #     fi_cnpj.to_csv(set_wd[2]+'\\cnpj_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
-                #     Relatório das análises exploratórias de dados.
-                #     fi_profile = ProfileReport(fi_cnpj, title='Profiling Report')
-                #     fi_profile.to_file(set_wd[2]+'\\cnpj_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.html')
 
 def f_regression_model(set_wd, file_pattern):
     """
