@@ -84,10 +84,10 @@ def f_transform(set_wd):
                 files_sample.drop(files_sample[files_sample.SIT == 'CANCELADA'].index, inplace=True)
                 files_sample.drop(files_sample[files_sample.SIT == 'FASE PRÉ-OPERACIONAL'].index, inplace=True)
                 files_sample = files_sample.drop(columns=['SIT'])
-                files_sample.drop(files_sample[files_sample.FUNDO_EXCLUSIVO == 'N'].index, inplace=True)
-                files_sample = files_sample.drop(columns=['FUNDO_EXCLUSIVO'])
-                files_sample.drop(files_sample[files_sample.INVEST_QUALIF == 'N'].index, inplace=True)
-                files_sample = files_sample.drop(columns=['INVEST_QUALIF'])
+                # files_sample.drop(files_sample[files_sample.FUNDO_EXCLUSIVO == 'N'].index, inplace=True)
+                # files_sample = files_sample.drop(columns=['FUNDO_EXCLUSIVO'])
+                # files_sample.drop(files_sample[files_sample.INVEST_QUALIF == 'N'].index, inplace=True)
+                # files_sample = files_sample.drop(columns=['INVEST_QUALIF'])
             else:
                 files_sample = dd.read_csv(files_list[files], sep=';', engine='python', quotechar='"', error_bad_lines=False)
                 files_sample = files_sample.compute()
@@ -114,7 +114,7 @@ def f_load(set_wd, file_load, file_pattern):
             if set_wd[path] == set_wd[0]:
                 # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
                 files_list = glob.glob('*'+file_pattern[step]+'*.csv')
-                var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'CLASSE', 'CONDOM', 'FUNDO_COTAS']
+                var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
                 fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list) 
                                     for files in files_list])
                 # Remove linhas repetidas.
@@ -139,62 +139,63 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
     """
     Client()
     regex_punctuation = r"[{}]".format(string.punctuation)
-    for path in range(0, 2):
-        # Determina o diretório da base de dados transformada.
-        os.chdir(set_wd[path])
-        if set_wd[path] == set_wd[0]:
-            # Lê a base de dado.
-            fi_cad = dd.read_csv(file_load[path]+'_'+file_pattern[4]+'.csv', sep=';', engine='python', encoding='utf-8-sig')
-            fi_cad = fi_cad.compute()
-            # Troca o nome das variáveis.
-            fi_cad = fi_cad.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
-                                            'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
-            # Primeiros 10 registros da base de dados.
-            print(fi_cad.head(10))
-            # Últimos 10 registros da base de dados.
-            print(fi_cad.tail(10))
-            # Tipo das variáveis.
-            print(fi_cad.dtypes)
-            # Número de variáveis e observações.
-            print(fi_cad.shape)
-            # Número de observações para cada variável.
-            print(fi_cad.count())
-            # Verifica se há dados faltantes.
-            print(fi_cad.isnull().sum())
-            # Relatório das análises exploratórias de dados.
-            fi_profile = ProfileReport(fi_cad, title='Profiling Report')
-            fi_profile.to_file(set_wd[2]+'\\'+file_load[path]+'_'+file_pattern[4]+'.html')
-        else:
-            # Lê a base de dado.
-            fi_diario = dd.read_csv(file_load[path]+'_'+file_pattern[4]+'.csv', sep=';', engine='python',
-                                    encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
-            fi_diario = fi_diario.compute()
-            # Troca o nome das variáveis.
-            fi_diario = fi_diario.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA', 'VL_PATRIM_LIQ': 'PATRIMONIO',
-                                                  'NR_COTST': 'COTISTAS'})
-            # Salva os arquivos concatenados em seu respectivo diretório.
-            fi_diario = fi_diario.merge(fi_cad, left_on='CNPJ', right_on='CNPJ')
-            fi_diario.to_csv(set_wd[2]+'\\merged_file_'+file_pattern[4]+'.csv', sep=';', index=False, encoding='utf-8-sig')
-            # Primeiros 10 registros da base de dados.
-            print(fi_diario.head(10))
-            # Últimos 10 registros da base de dados.
-            print(fi_diario.tail(10))
-            # Tipo das variáveis.
-            print(fi_diario.dtypes)
-            # Número de variáveis e observações.
-            print(fi_diario.shape)
-            # Número de observações para cada variável.
-            print(fi_diario.count())
-            # Verifica se há dados faltantes.
-            print(fi_diario.isnull().sum())
-            cnpj_fi_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
-            cnpj_list = cnpj_fi_unique['CNPJ'].tolist()
-            for cnpj in range(0, len(cnpj_list)):
-                fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0)
-                fi_cnpj.to_csv(set_wd[2]+'\\cnpj_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
+    for step in range(0, 4):
+        for path in range(0, 2):
+            # Determina o diretório da base de dados transformada.
+            os.chdir(set_wd[path])
+            if set_wd[path] == set_wd[0]:
+                # Lê a base de dado.
+                fi_cad = dd.read_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', engine='python', encoding='utf-8-sig')
+                fi_cad = fi_cad.compute()
+                # Troca o nome das variáveis.
+                fi_cad = fi_cad.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
+                                                'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
+                # Primeiros 10 registros da base de dados.
+                print(fi_cad.head(10))
+                # Últimos 10 registros da base de dados.
+                print(fi_cad.tail(10))
+                # Tipo das variáveis.
+                print(fi_cad.dtypes)
+                # Número de variáveis e observações.
+                print(fi_cad.shape)
+                # Número de observações para cada variável.
+                print(fi_cad.count())
+                # Verifica se há dados faltantes.
+                print(fi_cad.isnull().sum())
                 # Relatório das análises exploratórias de dados.
-                fi_profile = ProfileReport(fi_cnpj, title='Profiling Report')
-                fi_profile.to_file(set_wd[2]+'\\cnpj_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.html')
+                fi_profile = ProfileReport(fi_cad, title='Profiling Report')
+                fi_profile.to_file(set_wd[2]+'\\'+file_load[path]+'_'+file_pattern[step]+'.html')
+            else:
+                # Lê a base de dado.
+                fi_diario = dd.read_csv(file_load[path]+'_'+file_pattern[step]+'.csv', sep=';', engine='python',
+                                        encoding='utf-8-sig').astype({'VL_QUOTA': 'float16', 'VL_PATRIM_LIQ': 'float32', 'NR_COTST': np.uint16})
+                fi_diario = fi_diario.compute()
+                # Troca o nome das variáveis.
+                fi_diario = fi_diario.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DT_COMPTC': 'DATA', 'VL_QUOTA': 'QUOTA', 'VL_PATRIM_LIQ': 'PATRIMONIO',
+                                                      'NR_COTST': 'COTISTAS'})
+                # Salva os arquivos concatenados em seu respectivo diretório.
+                fi_diario = fi_diario.merge(fi_cad, left_on='CNPJ', right_on='CNPJ')
+                fi_diario.to_csv(set_wd[2]+'\\merged_file_'+file_pattern[step]+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                # Primeiros 10 registros da base de dados.
+                print(fi_diario.head(10))
+                # Últimos 10 registros da base de dados.
+                print(fi_diario.tail(10))
+                # Tipo das variáveis.
+                print(fi_diario.dtypes)
+                # Número de variáveis e observações.
+                print(fi_diario.shape)
+                # Número de observações para cada variável.
+                print(fi_diario.count())
+                # Verifica se há dados faltantes.
+                print(fi_diario.isnull().sum())
+                # cnpj_fi_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
+                # cnpj_list = cnpj_fi_unique['CNPJ'].tolist()
+                # for cnpj in range(0, len(cnpj_list)):
+                #     fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0)
+                #     fi_cnpj.to_csv(set_wd[2]+'\\cnpj_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
+                #     Relatório das análises exploratórias de dados.
+                #     fi_profile = ProfileReport(fi_cnpj, title='Profiling Report')
+                #     fi_profile.to_file(set_wd[2]+'\\cnpj_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.html')
 
 def f_regression_model(set_wd, file_pattern):
     """
