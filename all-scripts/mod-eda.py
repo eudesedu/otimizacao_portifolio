@@ -6,6 +6,10 @@ import dask.dataframe as dd
 from dask.distributed import Client
 from pandas_profiling import ProfileReport
 import numpy as np
+import re
+import string
+import numpy as np
+import yfinance as yf
 
 ##############################################################################################################################################################
 ################################################################# Portal Dados Abertos - CVM #################################################################
@@ -27,11 +31,12 @@ Visão geral das funcionalidades: http://ckan.org/features/
 ##############################################################################################################################################################
 # use este comando para limpar o ambiente: os.system('cls' if os.name == 'nt' else 'clear')
 
-def f_exploratory_data(set_wd, file_load, file_pattern):
+def f_exploratory_data(set_wd, file_load, file_pattern, tickers):
     """
     Gera os relatórios das análises exploratórias de dados para cada base de dados.
     """
     Client()
+    regex_punctuation = r"[{}]".format(string.punctuation)
     for step in range(0, 4):
         for path in range(0, 2):
             # Determina o diretório da base de dados transformada.
@@ -43,18 +48,6 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 # Troca o nome das variáveis.
                 fi_cad = fi_cad.rename(columns={'CNPJ_FUNDO': 'CNPJ', 'DENOM_SOCIAL': 'NOME', 'CONDOM': 'CONDICAO', 'FUNDO_COTAS': 'COTAS',
                                                 'FUNDO_EXCLUSIVO': 'EXCLUSIVO', 'INVEST_QUALIF': 'QUALIFICADO'})
-                # Primeiros 10 registros da base de dados.
-                print(fi_cad.head(10))
-                # Últimos 10 registros da base de dados.
-                print(fi_cad.tail(10))
-                # Tipo das variáveis.
-                print(fi_cad.dtypes)
-                # Número de variáveis e observações.
-                print(fi_cad.shape)
-                # Número de observações para cada variável.
-                print(fi_cad.count())
-                # Verifica se há dados faltantes.
-                print(fi_cad.isnull().sum())
                 # Relatório das análises exploratórias de dados.
                 fi_profile = ProfileReport(fi_cad, title='Profiling Report')
                 fi_profile.to_file(set_wd[2]+'\\'+file_load[path]+'_'+file_pattern[step]+'.html')
@@ -69,18 +62,19 @@ def f_exploratory_data(set_wd, file_load, file_pattern):
                 # Salva os arquivos concatenados em seu respectivo diretório.
                 fi_diario = fi_diario.merge(fi_cad, left_on='CNPJ', right_on='CNPJ')
                 fi_diario.to_csv(set_wd[2]+'\\merged_file_'+file_pattern[step]+'.csv', sep=';', index=False, encoding='utf-8-sig')
-                # Primeiros 10 registros da base de dados.
-                print(fi_diario.head(10))
-                # Últimos 10 registros da base de dados.
-                print(fi_diario.tail(10))
-                # Tipo das variáveis.
-                print(fi_diario.dtypes)
-                # Número de variáveis e observações.
-                print(fi_diario.shape)
-                # Número de observações para cada variável.
-                print(fi_diario.count())
-                # Verifica se há dados faltantes.
-                print(fi_diario.isnull().sum())
+                fi_diario = fi_diario.loc[fi_diario['CLASSE'] == 'Fundo de Ações']
+                cnpj_fi_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
+                cnpj_list = cnpj_fi_unique['CNPJ'].tolist()
+                for cnpj in range(0, len(cnpj_list)):
+                    fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0).reset_index()
+                    for index in range(0, len(tickers)):
+                        ticker = yf.download(tickers[index], start=file_pattern[0]+'-01-01', end=file_pattern[0]+'-12-31').reset_index()
+                        ticker = ticker.drop(columns=['Open', 'High', 'Low', 'Close'])
+                        ticker = ticker.astype({'Date': 'str', 'Adj Close': 'float32', 'Volume': np.uint32})
+                        ticker = ticker.rename(columns={'Date': 'DATA', 'Adj Close': tickers[index]+'_FECHAMENTO', 'Volume': tickers[index]+'_VOLUME'})
+                        fi_cnpj = fi_cnpj.merge(ticker, left_on='DATA', right_on='DATA')
+                    fi_cnpj.to_csv(set_wd[2]+'\\cnpj_'+file_pattern[0]+'_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.csv',
+                                   sep=';', index=False, encoding='utf-8-sig')
 
 def f_main():
     """
@@ -97,9 +91,10 @@ def f_main():
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_eda']
     file_load = ['fi_cad', 'fi_diario']
     file_pattern = ['2017', '2018', '2019', '2020', 'inf']
+    tickers = ['^BVSP', '^GSPC', '^IXIC', '^TNX', '000001.SS', '^N225', '^VIX', 'BRL=X', 'GC=F', 'CL=F']
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.exploratory_data:
-        f_exploratory_data(set_wd, file_load, file_pattern)
+        f_exploratory_data(set_wd, file_load, file_pattern, tickers)
 
 if __name__ == '__main__':
     f_main()
