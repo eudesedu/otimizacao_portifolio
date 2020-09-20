@@ -88,9 +88,9 @@ def f_exploratory_data_index(set_wd, file_load, file_pattern, tickers):
                 ticker = ticker.rename(columns={'Date': 'DATA', 'Adj Close': tickers[index]+'_FECHAMENTO', 'Volume': tickers[index]+'_VOLUME'})
                 fi_cnpj = fi_cnpj.merge(ticker, left_on='DATA', right_on='DATA')
             # Relatório das análises exploratórias de dados.
-            fi_profile = ProfileReport(fi_cnpj, title='Profiling Report')
-            fi_profile.to_file('\\temp\\cnpj_'+file_pattern[step]+'_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.html')
             fi_cnpj.to_csv('cnpj_'+file_pattern[step]+'_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
+            # fi_profile = ProfileReport(fi_cnpj, title='Profiling Report')
+            # fi_profile.to_file(set_wd[2]+'\\temp\\cnpj_'+file_pattern[step]+'_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.html')
 
 def f_exploratory_data_obv(set_wd, file_load, file_pattern, tickers):
     """
