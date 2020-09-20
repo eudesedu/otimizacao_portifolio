@@ -10,6 +10,7 @@ import re
 import string
 import numpy as np
 import yfinance as yf
+import glob
 
 ##############################################################################################################################################################
 ################################################################# Portal Dados Abertos - CVM #################################################################
@@ -31,12 +32,11 @@ Visão geral das funcionalidades: http://ckan.org/features/
 ##############################################################################################################################################################
 # use este comando para limpar o ambiente: os.system('cls' if os.name == 'nt' else 'clear')
 
-def f_exploratory_data(set_wd, file_load, file_pattern, tickers):
+def f_exploratory_data_cvm(set_wd, file_load, file_pattern, tickers):
     """
-    Gera os relatórios das análises exploratórias de dados para cada base de dados.
+    Gera os relatórios das análises exploratórias de dados para cada base de dados da CVM.
     """
     Client()
-    regex_punctuation = r"[{}]".format(string.punctuation)
     for step in range(0, 4):
         for path in range(0, 2):
             # Determina o diretório da base de dados transformada.
@@ -62,19 +62,70 @@ def f_exploratory_data(set_wd, file_load, file_pattern, tickers):
                 # Salva os arquivos concatenados em seu respectivo diretório.
                 fi_diario = fi_diario.merge(fi_cad, left_on='CNPJ', right_on='CNPJ')
                 fi_diario.to_csv(set_wd[2]+'\\merged_file_'+file_pattern[step]+'.csv', sep=';', index=False, encoding='utf-8-sig')
-                fi_diario = fi_diario.loc[fi_diario['CLASSE'] == 'Fundo de Ações']
-                cnpj_fi_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
-                cnpj_list = cnpj_fi_unique['CNPJ'].tolist()
-                for cnpj in range(0, len(cnpj_list)):
-                    fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0).reset_index()
-                    for index in range(0, len(tickers)):
-                        ticker = yf.download(tickers[index], start=file_pattern[0]+'-01-01', end=file_pattern[0]+'-12-31').reset_index()
-                        ticker = ticker.drop(columns=['Open', 'High', 'Low', 'Close'])
-                        ticker = ticker.astype({'Date': 'str', 'Adj Close': 'float32', 'Volume': np.uint32})
-                        ticker = ticker.rename(columns={'Date': 'DATA', 'Adj Close': tickers[index]+'_FECHAMENTO', 'Volume': tickers[index]+'_VOLUME'})
-                        fi_cnpj = fi_cnpj.merge(ticker, left_on='DATA', right_on='DATA')
-                    fi_cnpj.to_csv(set_wd[2]+'\\cnpj_'+file_pattern[0]+'_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.csv',
-                                   sep=';', index=False, encoding='utf-8-sig')
+
+def f_exploratory_data_index(set_wd, file_load, file_pattern, tickers):
+    """
+    Gera os relatórios das análises exploratórias de dados para cada base de dados dos índices.
+    """
+    Client()
+    os.chdir(set_wd[2])
+    regex_punctuation = r"[{}]".format(string.punctuation)
+    for step in range(0, 4):
+        # Lê a base de dado.
+        fi_diario = dd.read_csv('merged_file_'+file_pattern[step]+'.csv', sep=';', engine='python',
+                                encoding='utf-8-sig').astype({'QUOTA': 'float16', 'PATRIMONIO': 'float32', 'COTISTAS': np.uint16})
+        fi_diario = fi_diario.compute()
+        fi_diario = fi_diario.loc[fi_diario['CLASSE'] == 'Fundo de Ações']
+        cnpj_fi_unique = fi_diario.CNPJ.to_frame().drop_duplicates('CNPJ')
+        cnpj_fi_unique = cnpj_fi_unique.head(2)
+        cnpj_list = cnpj_fi_unique['CNPJ'].tolist()
+        for cnpj in range(0, len(cnpj_list)):
+            fi_cnpj = fi_diario.set_index('CNPJ').filter(regex=cnpj_list[cnpj], axis=0).reset_index()
+            for index in range(0, len(tickers)):
+                ticker = yf.download(tickers[index], start=file_pattern[step]+'-01-01', end=file_pattern[step]+'-12-31').reset_index()
+                ticker = ticker.drop(columns=['Open', 'High', 'Low', 'Close'])
+                ticker = ticker.astype({'Date': 'str', 'Adj Close': 'float32', 'Volume': np.uint32})
+                ticker = ticker.rename(columns={'Date': 'DATA', 'Adj Close': tickers[index]+'_FECHAMENTO', 'Volume': tickers[index]+'_VOLUME'})
+                fi_cnpj = fi_cnpj.merge(ticker, left_on='DATA', right_on='DATA')
+            # Relatório das análises exploratórias de dados.
+            fi_profile = ProfileReport(fi_cnpj, title='Profiling Report')
+            fi_profile.to_file('\\temp\\cnpj_'+file_pattern[step]+'_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.html')
+            fi_cnpj.to_csv('cnpj_'+file_pattern[step]+'_'+re.sub(regex_punctuation, "", cnpj_list[cnpj])+'.csv', sep=';', index=False, encoding='utf-8-sig')
+
+def f_exploratory_data_obv(set_wd, file_load, file_pattern, tickers):
+    """
+    Gera os relatórios das análises exploratórias de dados para cada base de dados considerando o On-Balance Volume (OBV).
+    """
+    Client()
+    os.chdir(set_wd[2])
+    # Define as variáveis do cadastro dos fundos de investimentos.
+    var_list = ['CNPJ', 'DATA', 'QUOTA', 'PATRIMONIO', 'COTISTAS', 'NOME', 'CLASSE', 'CONDICAO', 'COTAS', 'EXCLUSIVO', 'QUALIFICADO', '^BVSP_FECHAMENTO',
+                '^BVSP_VOLUME', '^GSPC_FECHAMENTO', '^GSPC_VOLUME', '^IXIC_FECHAMENTO', '^IXIC_VOLUME', '^TNX_FECHAMENTO', '000001.SS_FECHAMENTO',
+                '000001.SS_VOLUME', '^N225_FECHAMENTO', '^N225_VOLUME', '^VIX_FECHAMENTO', 'BRL=X_FECHAMENTO', 'GC=F_FECHAMENTO', 'GC=F_VOLUME',
+                'CL=F_FECHAMENTO', 'CL=F_VOLUME']
+    # Cria uma lista com os names dos arquivos com extenção CSV.
+    files_list = glob.glob('*cnpj*')
+    # Lê cada arquivo da lista removendo as variáveis desnecessárias:
+    for files in range(0, len(files_list)):
+        fi_cnpj = dd.read_csv(files_list[files], sep=';', engine='python', usecols=var_list, encoding='utf-8-sig')
+        fi_cnpj = fi_cnpj.compute()
+        fi_cnpj = fi_cnpj.rename(columns={'^BVSP_FECHAMENTO' : 'IBOV', '^BVSP_VOLUME' : 'IBOV_VOLUME', '^GSPC_FECHAMENTO' : 'SP500', 
+                                          '^GSPC_VOLUME' : 'SP500_VOLUME', '^IXIC_FECHAMENTO' : 'NASDAQ', '^IXIC_VOLUME' : 'NASDAQ_VOLUME',
+                                          '^TNX_FECHAMENTO' : 'BOND10Y', '000001.SS_FECHAMENTO' : 'SHANGHAI', '000001.SS_VOLUME' : 'SHANGHAI_VOLUME', 
+                                          '^N225_FECHAMENTO' : 'NIKKEI', '^N225_VOLUME' : 'NIKKEI_VOLUME', '^VIX_FECHAMENTO' : 'VOLATILITY', 
+                                          'BRL=X_FECHAMENTO' : 'DOLLAR', 'GC=F_FECHAMENTO' : 'GOLD', 'GC=F_VOLUME' : 'GOLD_VOLUME', 'CL=F_FECHAMENTO' : 'OIL', 
+                                          'CL=F_VOLUME' : 'OIL_VOLUME'})
+        volume = fi_cnpj.IBOV_VOLUME
+        list_obv = []
+        for i in range(0, len(volume) - 1):
+            previous_obv = volume.iloc[len(volume) - (len(volume) - i)]
+            current_obv = volume.iloc[len(volume) - (len(volume) - (i + 1))]
+            if current_obv == previous_obv:
+                list_obv.append(current_obv)
+            elif current_obv > previous_obv:
+                list_obv.append(previous_obv + current_obv)
+            elif current_obv < previous_obv:
+                list_obv.append(previous_obv - current_obv)
 
 def f_main():
     """
@@ -84,17 +135,23 @@ def f_main():
         Define os argumentos para chamar funções através de linha de comandos.
     """
     parser = argparse.ArgumentParser(description=descr)
-    parser.add_argument('-exploratory_data', dest='exploratory_data', action='store_const', const=True, help='Call the f_exploratory_data')
+    parser.add_argument('-exploratory_data_cvm', dest='exploratory_data_cvm', action='store_const', const=True, help='Call the f_exploratory_data_cvm')
+    parser.add_argument('-exploratory_data_index', dest='exploratory_data_index', action='store_const', const=True, help='Call the f_exploratory_data_index')
+    parser.add_argument('-exploratory_data_obv', dest='exploratory_data_obv', action='store_const', const=True, help='Call the f_exploratory_data_obv')
     cmd_args = parser.parse_args()
     # Lista de constantes como parâmetros de entrada.
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario',
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_eda']
-    file_load = ['fi_cad', 'fi_diario']
+    file_load = ['fi_cad', 'fi_diario', 'cnpj']
     file_pattern = ['2017', '2018', '2019', '2020', 'inf']
     tickers = ['^BVSP', '^GSPC', '^IXIC', '^TNX', '000001.SS', '^N225', '^VIX', 'BRL=X', 'GC=F', 'CL=F']
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
-    if cmd_args.exploratory_data:
-        f_exploratory_data(set_wd, file_load, file_pattern, tickers)
+    if cmd_args.exploratory_data_cvm:
+        f_exploratory_data_cvm(set_wd, file_load, file_pattern, tickers)
+    if cmd_args.exploratory_data_index:
+        f_exploratory_data_index(set_wd, file_load, file_pattern, tickers)
+    if cmd_args.exploratory_data_obv:
+        f_exploratory_data_obv(set_wd, file_load, file_pattern, tickers)
 
 if __name__ == '__main__':
     f_main()
