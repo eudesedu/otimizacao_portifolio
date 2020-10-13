@@ -134,8 +134,8 @@ def f_exploratory_data_obv(set_wd, file_load, file_pattern, tickers, volume_inde
             fi_cnpj.drop(fi_cnpj.tail(1).index, inplace=True)
             # Relatório das análises exploratórias de dados.
             fi_cnpj.to_csv('obv_'+files_list[files], sep=';', index=False, encoding='utf-8-sig')
-            fi_profile = ProfileReport(fi_cnpj, title='Profiling Report')
-            fi_profile.to_file('obv_'+files_list[files][0:28]+'.html')
+            # fi_profile = ProfileReport(fi_cnpj, title='Profiling Report')
+            # fi_profile.to_file('obv_'+files_list[files][0:28]+'.html')
 
 def f_main():
     """

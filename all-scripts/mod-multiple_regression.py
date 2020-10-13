@@ -13,15 +13,12 @@ import statsmodels.api as sm
 #################################################################  http://dados.cvm.gov.br/  #################################################################
 """
 CKAN é a maior plataforma para portal de dados em software livre do mundo.
-
 CKAN é uma solução completa e pronta para usar que torna os dados acessíveis e utilizáveis – ao prover ferramentas para simplificar a publicação, 
 o compartilhamento, o encontro e a utilização dos dados (incluindo o armazenamento de dados e o provimento de robustas APIs de dados). CKAN está direcionado 
 a publicadores de dados (governos nacionais e regionais, companhias e organizações) que querem tornar seus dados abertos e disponíveis.
-
 CKAN é usado por governos e grupos de usuários em todo o mundo e impulsiona vários portais oficiais e da comunidade, incluindo portais governamentais locais, 
 nacionais e internacionais, tais como o data.gov.uk do Reino Unido, o publicdata.eu da União Europeia, o dados.gov.br do Brasil, o portal do governo da 
 Holanda, assim como sítios de cidades e municípios nos EUA, Reino Unido, Argentina, Finlândia e em outros lugares.
-
 CKAN: http://ckan.org/ | http://ckan.org/tour/
 Visão geral das funcionalidades: http://ckan.org/features/
 """
