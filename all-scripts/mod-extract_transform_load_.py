@@ -109,8 +109,7 @@ def f_load(set_wd, file_load, file_pattern):
                 # Lê e concatena todos os arquivos CSV do diretório - fi_cad.
                 files_list = glob.glob('*'+file_pattern[step]+'*.csv')
                 var_list = ['CNPJ_FUNDO', 'DENOM_SOCIAL', 'CLASSE', 'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
-                fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list) 
-                                    for files in files_list])
+                fi_cad = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list) for files in files_list])
                 # Remove linhas repetidas.
                 fi_cad = fi_cad.drop_duplicates('CNPJ_FUNDO')
                 fi_cad = fi_cad.compute()
