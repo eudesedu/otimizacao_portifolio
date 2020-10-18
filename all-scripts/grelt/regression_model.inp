@@ -1,4 +1,2 @@
-# logged commands
 open C:\Users\eudes\Documents\github\dataset\tcc\fi_eda\data_model_all_vars.csv
-# model 1
 ols QUOTA 0 IBOV SP500 NASDAQ BOND10Y SHANGHAI NIKKEI DOLLAR GOLD OIL
