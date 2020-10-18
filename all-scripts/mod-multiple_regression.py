@@ -1,46 +1,20 @@
 import sys
 import argparse
-import os
-import pandas as pd
-import dask.dataframe as dd
 from dask.distributed import Client
-import numpy as np
-from sklearn import linear_model
-import statsmodels.api as sm
+import os
+import glob
+import dask.dataframe as dd
+import pandas as pd
 
 def f_regression_model(set_wd, file_pattern):
     """
     Modelo baseado em regressão linear múltipla para variável resposta: Valor da Cota (VL_QUOTA).
     """
-    var_list = ['CNPJ_FUNDO', 'DT_COMPTC', 'VL_QUOTA', 'VL_PATRIM_LIQ', 'NR_COTST', 'DENOM_SOCIAL', 'SIT', 'CLASSE',
-                'CONDOM', 'FUNDO_COTAS', 'FUNDO_EXCLUSIVO', 'INVEST_QUALIF']
-    fi_geral_modelo = pd.DataFrame()
-    for step in range(0, 4):
-        os.chdir(set_wd[2]+'\\'+file_pattern[step])
-        fi_geral = pd.read_csv('fi_geral.csv', sep=';', engine='python', encoding='utf-8-sig', usecols=var_list).astype({'VL_QUOTA': 'float16',
-                                                                                                                         'VL_PATRIM_LIQ': 'float32',
-                                                                                                                         'NR_COTST': np.uint16})
-        for chunk in fi_geral:
-            chunk = fi_geral.loc[fi_geral['CNPJ_FUNDO'] == '11.052.478/0001-81']
-            fi_geral_modelo = pd.concat([fi_geral_modelo, chunk], ignore_index=True)
-    fi_geral_modelo.to_csv(set_wd[2]+'\\fi_geral_modelo.csv', sep=';', index=False, encoding='utf-8-sig')
-    fi_geral_modelo = fi_geral_modelo.drop(columns=['CNPJ_FUNDO', 'DENOM_SOCIAL', 'SIT', 'CLASSE', 'CONDOM', 'FUNDO_COTAS',
-                                                    'FUNDO_EXCLUSIVO', 'INVEST_QUALIF'])
-    x = fi_geral_modelo[['VL_PATRIM_LIQ', 'NR_COTST']]
-    y = fi_geral_modelo['VL_QUOTA']
-    regression = linear_model.LinearRegression().fit(x, y)
-    print('Intercept: ', regression.intercept_, '| Coefficients: ', regression.coef_)
-    patrimonio_liquido = 60240396.0
-    cotistas = 385
-    print ('Resultado: ', regression.predict([[patrimonio_liquido, cotistas]]))
-    patrimonio_liquido = 665332160.0
-    cotistas = 13841
-    print ('Resultado: ', regression.predict([[patrimonio_liquido, cotistas]]))
-    x = sm.add_constant(x)
-    regression_model = sm.OLS(y, x).fit()
-    regression_model.predict(x) 
-    regression_model = regression_model.summary()
-    print(regression_model)
+    Client()
+    os.chdir(set_wd[2])
+    files_list = glob.glob('*obv_cnpj*')
+    data_model = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') for files in files_list])
+    data_model = data_model.compute()
 
 def f_main():
     """
