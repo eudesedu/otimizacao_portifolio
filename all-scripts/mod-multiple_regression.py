@@ -15,6 +15,8 @@ def f_regression_model(set_wd, file_pattern):
     files_list = glob.glob('*obv_cnpj*')
     data_model = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig') for files in files_list])
     data_model = data_model.compute()
+    os.chdir(set_wd[3])
+    os.system(r'gretlcli -r regression_model.inp')
 
 def f_main():
     """
@@ -26,11 +28,10 @@ def f_main():
     parser = argparse.ArgumentParser(description=descr)
     parser.add_argument('-regression_model', dest='regression_model', action='store_const', const=True, help='Call the f_regression_model')
     cmd_args = parser.parse_args()
-    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario',
-              'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_eda']
-    file_pattern = ['2017', '2018', '2019', '2020', 'inf']
+    set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario', 
+              'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_eda', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_model']
     if cmd_args.regression_model:
-        f_regression_model(set_wd, file_pattern)
+        f_regression_model(set_wd)
 
 if __name__ == '__main__':
     f_main()
