@@ -9,7 +9,6 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
-from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score
 
 ##############################################################################################################################################################
@@ -29,7 +28,7 @@ Visão geral das funcionalidades: http://ckan.org/features/
 ##############################################################################################################################################################
 # use este comando para limpar o ambiente: os.system('cls' if os.name == 'nt' else 'clear')
 
-def f_machine_learning_regression(set_wd, file_pattern):
+def f_machine_learning_regression(set_wd):
     """
     Modelo de regressão baseado na biblioteca de aprendizado de máquina "scikit-learn".
     """
@@ -45,7 +44,7 @@ def f_machine_learning_regression(set_wd, file_pattern):
     features.to_csv('features_all_vars.csv', sep=';', index=False, encoding='utf-8-sig')
     # Teste e Treino.
     target = features.drop(columns=['IBOV', 'BOND10Y', 'SHANGHAI', 'NIKKEI', 'DOLLAR', 'OIL'])
-    features = features.drop(columns=['QUOTA'])
+    features = features.drop(columns=['QUOTA', 'BOND10Y'])
     features_train, features_test, target_train, target_test = train_test_split(features, target, test_size = 0.2)
     linear_regression = LinearRegression()
     linear_regression.fit(features_train, target_train)
@@ -53,8 +52,8 @@ def f_machine_learning_regression(set_wd, file_pattern):
     target_pred = pd.DataFrame({'COTA': target_pred[:, 0]})
     print('Intercept: ', linear_regression.intercept_, '| Coefficients: ', linear_regression.coef_)
     # Métricas.
-    r2_score(target_train, linear_regression.predict(features_train))
-    r2_score(target_test, linear_regression.predict(features_test))
+    print(r2_score(target_train, linear_regression.predict(features_train)))
+    print(r2_score(target_test, linear_regression.predict(features_test)))
 
 def f_main():
     """
@@ -69,10 +68,9 @@ def f_main():
     # Lista de constantes como parâmetros de entrada.
     set_wd = ['C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_cad', 'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_inf_diario',
               'C:\\Users\\eudes\\Documents\\github\\dataset\\tcc\\fi_eda']
-    file_pattern = ['2017', '2018', '2019', '2020']
     # Define os argumentos e variáveis como parâmetros de entrada para funções.
     if cmd_args.machine_learning_regression:
-        f_machine_learning_regression(set_wd, file_pattern)
+        f_machine_learning_regression(set_wd)
 
 if __name__ == '__main__':
     f_main()
