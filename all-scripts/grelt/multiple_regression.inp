@@ -1,0 +1,22 @@
+open \
+     C:\Users\eudes\Documents\github\dataset\tcc\fi_eda\data_model.csv
+
+# The model has multicollinearity problems.
+ols \
+    QUOTA 0 PATRIMONIO COTISTAS IBOV IBOV_VOLUME SP500 SP500_VOLUME NASDAQ \
+    NASDAQ_VOLUME BOND10Y SHANGHAI SHANGHAI_VOLUME NIKKEI NIKKEI_VOLUME \
+    VOLATILITY DOLLAR GOLD GOLD_VOLUME OIL OIL_VOLUME IBOV_OBV SP500_OBV \
+    NASDAQ_OBV SHANGHAI_OBV NIKKEI_OBV GOLD_OBV OIL_OBV
+modtest --normality
+vif
+bkw
+
+# The model review.
+ols \
+    QUOTA 0 IBOV SHANGHAI NIKKEI DOLLAR OIL
+modtest --normality
+modtest --white
+vif
+bkw
+summary QUOTA IBOV SHANGHAI NIKKEI DOLLAR OIL
+corr QUOTA IBOV SHANGHAI NIKKEI DOLLAR OIL
