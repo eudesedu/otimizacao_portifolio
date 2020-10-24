@@ -32,7 +32,7 @@ def f_regression_models(set_wd):
         """
         features = pd.DataFrame(data_model, columns=['IBOV', 'SHANGHAI', 'NIKKEI', 'DOLLAR', 'OIL'])
         target = pd.DataFrame(data_model, columns=['QUOTA'])
-        features_train, features_test, target_train, target_test = train_test_split(features, target, test_size = 0.2)
+        features_train, features_test, target_train, target_test = train_test_split(features, target, test_size = 0.3)
         linear_regression = LinearRegression()
         linear_regression.fit(features_train, target_train)
         target_pred = linear_regression.predict(features_test)
