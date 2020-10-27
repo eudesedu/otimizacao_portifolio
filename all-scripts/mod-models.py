@@ -8,7 +8,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
-from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 def f_regression_models(set_wd):
     """
@@ -16,30 +17,39 @@ def f_regression_models(set_wd):
     """
     Client()
     os.chdir(set_wd[2])
-    files_list = glob.glob('*obv_cnpj*')
-    var_list = ['QUOTA', 'PATRIMONIO', 'COTISTAS', 'IBOV', 'IBOV_VOLUME', 'SP500', 'SP500_VOLUME', 'NASDAQ', 'NASDAQ_VOLUME', 'BOND10Y', 'SHANGHAI',
-                'SHANGHAI_VOLUME', 'NIKKEI', 'NIKKEI_VOLUME', 'VOLATILITY', 'DOLLAR', 'GOLD', 'GOLD_VOLUME', 'OIL', 'OIL_VOLUME', 'IBOV_OBV', 'SP500_OBV',
-                'NASDAQ_OBV', 'SHANGHAI_OBV', 'NIKKEI_OBV', 'GOLD_OBV', 'OIL_OBV']
-    data_model = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=var_list) for files in files_list])
-    data_model = data_model.compute()
-    data_model.to_csv('data_model.csv', sep=';', index=False, encoding='utf-8-sig')
+    list_files = glob.glob('*obv_cnpj*')
+    list_varibles = ['QUOTA', 'DATA', 'PATRIMONIO', 'COTISTAS', 'IBOV', 'IBOV_VOLUME', 'SP500', 'SP500_VOLUME', 'NASDAQ', 'NASDAQ_VOLUME', 'BOND10Y',
+                     'SHANGHAI', 'SHANGHAI_VOLUME', 'NIKKEI', 'NIKKEI_VOLUME', 'VOLATILITY', 'DOLLAR', 'GOLD', 'GOLD_VOLUME', 'OIL', 'OIL_VOLUME',
+                     'IBOV_OBV', 'SP500_OBV', 'NASDAQ_OBV', 'SHANGHAI_OBV', 'NIKKEI_OBV', 'GOLD_OBV', 'OIL_OBV']
+    df_regression_models = dd.concat([dd.read_csv(files, sep=';', engine='python', encoding='utf-8-sig', usecols=list_varibles) for files in list_files])
+    df_regression_models = df_regression_models.compute()
+    df_regression_models.to_csv('batch_regression_models.csv', sep=';', index=False, encoding='utf-8-sig')
     os.chdir(set_wd[3])
-    os.system(r'gretlcli -r multiple_regression.inp')
+    os.system(r'gretlcli -r gretl_regression_models.inp')
+    os.chdir(set_wd[2])
 
     def f_machine_learning_regression():
         """
         Modelo de regressão baseado na biblioteca de aprendizado de máquina "scikit-learn".
         """
-        features = pd.DataFrame(data_model, columns=['IBOV', 'SHANGHAI', 'NIKKEI', 'DOLLAR', 'OIL'])
-        target = pd.DataFrame(data_model, columns=['QUOTA'])
-        features_train, features_test, target_train, target_test = train_test_split(features, target, test_size = 0.3)
-        linear_regression = LinearRegression()
-        linear_regression.fit(features_train, target_train)
-        target_pred = linear_regression.predict(features_test)
-        target_pred = pd.DataFrame({'COTA': target_pred[:, 0]})
-        print('Intercept: ', linear_regression.intercept_, '| Coefficients: ', linear_regression.coef_)
-        print(r2_score(target_train, linear_regression.predict(features_train)))
-        print(r2_score(target_test, linear_regression.predict(features_test)))
+        df_features = pd.DataFrame(df_regression_models, columns=['IBOV', 'SHANGHAI', 'NIKKEI', 'DOLLAR', 'OIL'])
+        df_target = pd.DataFrame(df_regression_models, columns=['QUOTA'])
+        df_features_train, df_features_test, df_target_train, df_target_test = train_test_split(df_features, df_target, test_size = 0.3)
+        print(df_features_train, df_features_test, df_target_train, df_target_test)
+
+        model_linear_regression = LinearRegression().fit(df_features_train, df_target_train)
+
+        array_target_prediction = model_linear_regression.predict(df_features_test)
+        df_target_prediction = pd.DataFrame({'COTA': array_target_prediction[:, 0]})
+        print(df_target_prediction, 'Intercept: ', model_linear_regression.intercept_, '| Coefficients: ', model_linear_regression.coef_)
+        print('R-squared train: ', r2_score(df_target_train, model_linear_regression.predict(df_features_train)))
+        print('R-squared test : ', r2_score(df_target_test, model_linear_regression.predict(df_features_test)))
+
+        df_features_prediction = pd.DataFrame({'Previsao_Cota': model_linear_regression.predict(df_features_train)[:, 0]})
+        df_ml_target = pd.concat([df_target_train.reset_index(), df_features_prediction], axis=1).drop(columns=['index'])
+        df_ml_target.to_csv('batch_ml_target.csv', sep=';', index=False, encoding='utf-8-sig')
+        os.chdir(set_wd[3])
+        os.system(r'gretlcli -r gretl_ml_regression_models.inp')
     f_machine_learning_regression()
 
 def f_main():

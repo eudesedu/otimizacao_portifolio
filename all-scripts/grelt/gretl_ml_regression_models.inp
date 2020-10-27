@@ -1,0 +1,12 @@
+open \
+     C:\Users\eudes\Documents\github\dataset\tcc\fi_eda\batch_ml_target.csv
+
+# Model review.
+ols \
+    QUOTA 0 Previsao_Cota
+gnuplot QUOTA Previsao_Cota
+modtest --normality
+fcast 1 546 --static
+summary QUOTA Previsao_Cota
+
+exit

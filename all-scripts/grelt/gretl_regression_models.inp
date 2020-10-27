@@ -1,5 +1,5 @@
 open \
-     C:\Users\eudes\Documents\github\dataset\tcc\fi_eda\data_model.csv
+     C:\Users\eudes\Documents\github\dataset\tcc\fi_eda\batch_regression_models.csv
 
 # The first model version has multicollinearity problems.
 ols \
@@ -20,3 +20,4 @@ vif
 bkw
 summary QUOTA IBOV SHANGHAI NIKKEI DOLLAR OIL
 corr QUOTA IBOV SHANGHAI NIKKEI DOLLAR OIL
+exit
